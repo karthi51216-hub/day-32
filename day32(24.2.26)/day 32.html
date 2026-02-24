@@ -1,0 +1,622 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kanban Board</title>
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  h2{margin:0 0 12px}
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .col{background:#fff;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .col h3{margin:0 0 10px;font-size:16px}
+  .dropzone{min-height:220px;border:2px dashed #e5e7eb;border-radius:10px;padding:10px}
+  .card{background:#111827;color:#fff;padding:10px;border-radius:10px;margin:10px 0;cursor:grab}
+  .top{display:flex;gap:10px;margin:0 0 16px}
+  input{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .over{background:#eff6ff;border-color:#2563eb}
+</style>
+</head>
+<body>
+
+    <!---task 1-->
+  <h2>Kanban Board</h2>
+  <div class="top">
+    <input id="taskInput" placeholder="New task..." />
+    <button id="addBtn">Add to Todo</button>
+  </div>
+
+  <div class="board">
+    <div class="col">
+      <h3>Todo</h3>
+      <div class="dropzone" data-col="todo"></div>
+    </div>
+    <div class="col">
+      <h3>Doing</h3>
+      <div class="dropzone" data-col="doing"></div>
+    </div>
+    <div class="col">
+      <h3>Done</h3>
+      <div class="dropzone" data-col="done"></div>
+    </div>
+  </div>
+
+<script>
+  const zones = document.querySelectorAll(".dropzone");
+  const input = document.getElementById("taskInput");
+  const addBtn = document.getElementById("addBtn");
+  let dragged = null;
+
+  function createCard(text){
+    const div = document.createElement("div");
+    div.className = "card";
+    div.draggable = true;
+    div.textContent = text;
+
+    div.addEventListener("dragstart", () => {
+      dragged = div;
+      setTimeout(() => div.style.opacity = "0.4", 0);
+    });
+    div.addEventListener("dragend", () => {
+      dragged = null;
+      div.style.opacity = "1";
+    });
+    return div;
+  }
+
+  addBtn.addEventListener("click", () => {
+    const text = input.value.trim();
+    if(!text) return;
+    zones[0].appendChild(createCard(text));
+    input.value = "";
+  });
+
+  zones.forEach(zone => {
+    zone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      zone.classList.add("over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+    zone.addEventListener("drop", () => {
+      zone.classList.remove("over");
+      if(dragged) zone.appendChild(dragged);
+    });
+  });
+</script>
+<hr><hr>
+<!---task 2-->
+<style>
+     *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .box{max-width:650px;margin:auto;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .row{display:flex;gap:10px;margin:10px 0}
+  input,select{padding:10px;border:1px solid #d1d5db;border-radius:10px;flex:1}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .danger{background:#ef4444}
+  pre{background:#0b1220;color:#e5e7eb;padding:12px;border-radius:12px;overflow:auto}
+</style>
+
+ <div class="box">
+    <h2>Dynamic Form Builder</h2>
+
+    <div class="row">
+      <select id="type">
+        <option value="text">Text</option>
+        <option value="email">Email</option>
+        <option value="number">Number</option>
+        <option value="date">Date</option>
+      </select>
+      <input id="label" placeholder="Label name (e.g., Phone)" />
+      <button id="add">Add Field</button>
+    </div>
+
+    <form id="formArea"></form>
+
+    <div class="row">
+      <button id="showData" type="button">Show Form Data</button>
+      <button id="clear" type="button" class="danger">Clear All</button>
+    </div>
+
+    <pre id="out">{}</pre>
+  </div>
+
+<script>
+  const typeEl = document.getElementById("type");
+  const labelEl = document.getElementById("label");
+  const addBtnn = document.getElementById("add");
+  const formArea = document.getElementById("formArea");
+  const out = document.getElementById("out");
+
+  function makeField(type, label){
+    const wrap = document.createElement("div");
+    wrap.className = "row";
+
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = label.toLowerCase().replace(/\s+/g,'_');
+    input.placeholder = label;
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.textContent = "Remove";
+    del.className = "danger";
+    del.addEventListener("click", () => wrap.remove());
+
+    wrap.appendChild(input);
+    wrap.appendChild(del);
+    return wrap;
+  }
+
+  addBtnn.addEventListener("click", () => {
+    const label = labelEl.value.trim();
+    if(!label) return;
+    formArea.appendChild(makeField(typeEl.value, label));
+    labelEl.value = "";
+  });
+
+  document.getElementById("showData").addEventListener("click", () => {
+    const data = {};
+    formArea.querySelectorAll("input").forEach(i => data[i.name] = i.value);
+    out.textContent = JSON.stringify(data, null, 2);
+  });
+
+  document.getElementById("clear").addEventListener("click", () => {
+    formArea.innerHTML = "";
+    out.textContent = "{}";
+  });
+</script>
+<hr><hr>
+
+<!---task 3 -->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .wrap{max-width:760px;margin:auto;display:grid;gap:14px}
+  .card1{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .items{display:grid;gap:10px}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid #e5e7eb;border-radius:12px}
+  .left{display:flex;flex-direction:column}
+  .price{color:#6b7280;font-size:13px}
+  .qty{display:flex;align-items:center;gap:8px}
+  button{border:0;border-radius:10px;padding:8px 10px;background:#2563eb;color:#fff;cursor:pointer}
+  .danger{background:#ef4444}
+  .muted{color:#6b7280}
+</style>
+
+  <div class="wrap">
+    <div class="card1">
+      <h2>Products</h2>
+      <div id="productList" class="items"></div>
+    </div>
+
+    <div class="card1">
+      <h2>Cart</h2>
+      <div id="cartList" class="items"></div>
+      <h3>Total: ₹ <span id="total">0</span></h3>
+      <p class="muted"> change the  Quantity to total auto update .</p>
+    </div>
+  </div>
+
+<script>
+  const products = [
+    {id:1, name:"T-Shirt", price:499},
+    {id:2, name:"Shoes", price:1499},
+    {id:3, name:"Watch", price:999},
+  ];
+  const cart = new Map(); // id -> {id,name,price,qty}
+
+  const productList = document.getElementById("productList");
+  const cartList = document.getElementById("cartList");
+  const totalEl = document.getElementById("total");
+
+  function renderProducts(){
+    productList.innerHTML = "";
+    products.forEach(p => {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="left">
+          <b>${p.name}</b>
+          <span class="price">₹ ${p.price}</span>
+        </div>
+        <button>Add</button>
+      `;
+      row.querySelector("button").onclick = () => addToCart(p);
+      productList.appendChild(row);
+    });
+  }
+
+  function addToCart(p){
+    if(cart.has(p.id)){
+      cart.get(p.id).qty += 1;
+    } else {
+      cart.set(p.id, {...p, qty:1});
+    }
+    renderCart();
+  }
+
+  function updateQty(id, delta){
+    const item = cart.get(id);
+    if(!item) return;
+    item.qty += delta;
+    if(item.qty <= 0) cart.delete(id);
+    renderCart();
+  }
+
+  function removeItem(id){
+    cart.delete(id);
+    renderCart();
+  }
+
+  function calcTotal(){
+    let total = 0;
+    cart.forEach(i => total += i.price * i.qty);
+    totalEl.textContent = total;
+  }
+
+  function renderCart(){
+    cartList.innerHTML = "";
+    if(cart.size === 0){
+      cartList.innerHTML = `<div class="item"><span class="muted">Cart is empty</span></div>`;
+      totalEl.textContent = "0";
+      return;
+    }
+
+    cart.forEach(i => {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="left">
+          <b>${i.name}</b>
+          <span class="price">₹ ${i.price} × ${i.qty} = ₹ ${i.price*i.qty}</span>
+        </div>
+        <div class="qty">
+          <button>-</button>
+          <b>${i.qty}</b>
+          <button>+</button>
+          <button class="danger">Remove</button>
+        </div>
+      `;
+      const btns = row.querySelectorAll("button");
+      btns[0].onclick = () => updateQty(i.id, -1);
+      btns[1].onclick = () => updateQty(i.id, +1);
+      btns[2].onclick = () => removeItem(i.id);
+
+      cartList.appendChild(row);
+    });
+
+    calcTotal();
+  }
+
+  renderProducts();
+  renderCart();
+</script>
+
+<hr><hr>
+
+<!--task 4 -->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .card{max-width:820px;margin:auto;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:left}
+  th{cursor:pointer;user-select:none}
+  .hint{color:#6b7280;font-size:13px}
+</style>
+
+  <div class="card">
+    <h2>Sortable Table</h2>
+    <p class="hint">Column header click panna sort aagum.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th data-key="name">Name ⬍</th>
+          <th data-key="age">Age ⬍</th>
+          <th data-key="salary">Salary ⬍</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+<script>
+  let data = [
+    {name:"Arun", age:22, salary:25000},
+    {name:"Bala", age:28, salary:42000},
+    {name:"Karthi", age:24, salary:30000},
+    {name:"Devi", age:26, salary:38000},
+  ];
+
+  const tbody = document.getElementById("tbody");
+  const state = { key:null, dir:"asc" };
+
+  function render(){
+    tbody.innerHTML = "";
+    data.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.name}</td><td>${r.age}</td><td>${r.salary}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function sortBy(key){
+    if(state.key === key){
+      state.dir = state.dir === "asc" ? "desc" : "asc";
+    } else {
+      state.key = key;
+      state.dir = "asc";
+    }
+
+    data.sort((a,b) => {
+      const va = a[key], vb = b[key];
+      const res = (typeof va === "string")
+        ? va.localeCompare(vb)
+        : va - vb;
+      return state.dir === "asc" ? res : -res;
+    });
+
+    render();
+  }
+
+  document.querySelectorAll("th").forEach(th => {
+    th.addEventListener("click", () => sortBy(th.dataset.key));
+  });
+
+  render();
+</script>
+
+<hr><hr>
+
+<!---task 5-->
+
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --text:#0f172a; --accent:#2563eb;
+  }
+  body{margin:0;font-family:system-ui,Arial;background:var(--bg);color:var(--text);padding:20px}
+  .top{display:flex;gap:10px;align-items:center;max-width:900px;margin:auto}
+  select{padding:10px;border-radius:10px;border:1px solid #d1d5db}
+  .grid{max-width:900px;margin:14px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08);border-left:6px solid var(--accent)}
+  .muted{opacity:.7}
+</style>
+
+  <div class="top">
+    <h2 style="margin:0;flex:1">Dashboard</h2>
+    <select id="theme">
+      <option value="blue">Blue</option>
+      <option value="dark">Dark</option>
+      <option value="green">Green</option>
+    </select>
+  </div>
+
+  <div class="grid">
+    <div class="card"><b>Users</b><div class="muted">1,240</div></div>
+    <div class="card"><b>Orders</b><div class="muted">310</div></div>
+    <div class="card"><b>Revenue</b><div class="muted">₹ 98,000</div></div>
+  </div>
+
+<script>
+  const themes = {
+    blue:  {bg:"#f4f6fb", card:"#ffffff", text:"#0f172a", accent:"#2563eb"},
+    dark:  {bg:"#0b1220", card:"#111827", text:"#e5e7eb", accent:"#f59e0b"},
+    green: {bg:"#f0fdf4", card:"#ffffff", text:"#064e3b", accent:"#16a34a"},
+  };
+
+  const select = document.getElementById("theme");
+
+  function applyTheme(name){
+    const t = themes[name] || themes.blue;
+    document.documentElement.style.setProperty("--bg", t.bg);
+    document.documentElement.style.setProperty("--card", t.card);
+    document.documentElement.style.setProperty("--text", t.text);
+    document.documentElement.style.setProperty("--accent", t.accent);
+    localStorage.setItem("theme", name);
+  }
+
+  const saved = localStorage.getItem("theme") || "blue";
+  select.value = saved;
+  applyTheme(saved);
+
+  select.addEventListener("change", e => applyTheme(e.target.value));
+</script>
+
+<hr><hr>
+
+<!--task 6 -->
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb}
+  .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  aside{background:#111827;color:#fff;padding:14px}
+  .logo{font-weight:800;margin:6px 0 14px}
+  .link{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer}
+  .link:hover{background:rgba(255,255,255,.08)}
+  main{padding:18px}
+  .card2{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+</style>
+
+<div class="layout">
+  <aside>
+    <div class="logo">My App</div>
+    <div id="menu"></div>
+  </aside>
+  <main>
+    <div class="card2">
+      <h2 id="title">Home</h2>
+      <p id="content">Menu will changed.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  const items = [
+    {title:"Home", content:"Welcome to Home page"},
+    {title:"Profile", content:"This is Profile section"},
+    {title:"Settings", content:"Change your settings here"},
+    {title:"Logout", content:" logout clicked"},
+  ];
+
+  const menu = document.getElementById("menu");
+  const title = document.getElementById("title");
+  const content = document.getElementById("content");
+
+  items.forEach((it, idx) => {
+    const div = document.createElement("div");
+    div.className = "link";
+    div.textContent = it.title;
+    div.addEventListener("click", () => {
+      title.textContent = it.title;
+      content.textContent = it.content;
+    });
+    menu.appendChild(div);
+  });
+</script>
+
+<hr><hr>
+
+<!---task 7 -->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .box{max-width:760px;margin:auto;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  textarea{width:100%;min-height:70px;padding:10px;border-radius:10px;border:1px solid #d1d5db;resize:vertical}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer;margin-top:10px}
+  .comment{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:12px 0}
+  .meta{display:flex;justify-content:space-between;gap:10px}
+  .replyBox{margin-top:10px;display:none}
+  .children{margin-left:22px;margin-top:10px;border-left:3px solid #e5e7eb;padding-left:12px}
+  .small{font-size:13px;color:#6b7280}
+</style>
+
+ <div class="box">
+    <h2>Comments</h2>
+    <textarea id="newText" placeholder="Write a comment..."></textarea>
+    <button id="post">Post Comment</button>
+    <div id="list"></div>
+  </div>
+
+<script>
+  const list = document.getElementById("list");
+  const postBtn = document.getElementById("post");
+  const newText = document.getElementById("newText");
+
+  function createCommentNode(text){
+    const wrap = document.createElement("div");
+    wrap.className = "comment";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `<b>User</b><span class="small">${new Date().toLocaleString()}</span>`;
+
+    const p = document.createElement("p");
+    p.textContent = text;
+
+    const actions = document.createElement("div");
+    actions.innerHTML = `<button type="button">Reply</button>`;
+    const replyBtn = actions.querySelector("button");
+
+    const replyBox = document.createElement("div");
+    replyBox.className = "replyBox";
+    replyBox.innerHTML = `
+      <textarea placeholder="Write a reply..."></textarea>
+      <button type="button">Post Reply</button>
+    `;
+    const replyText = replyBox.querySelector("textarea");
+    const replyPost = replyBox.querySelectorAll("button")[0];
+
+    const children = document.createElement("div");
+    children.className = "children";
+
+    replyBtn.onclick = () => {
+      replyBox.style.display = replyBox.style.display === "block" ? "none" : "block";
+    };
+
+    replyPost.onclick = () => {
+      const t = replyText.value.trim();
+      if(!t) return;
+      children.appendChild(createCommentNode(t));
+      replyText.value = "";
+      replyBox.style.display = "none";
+    };
+
+    wrap.append(meta, p, actions, replyBox, children);
+    return wrap;
+  }
+
+  postBtn.addEventListener("click", () => {
+    const t = newText.value.trim();
+    if(!t) return;
+    list.appendChild(createCommentNode(t));
+    newText.value = "";
+  });
+</script>
+
+<hr><hr>
+
+<!---task 8 -->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .box1{max-width:520px;margin:auto;background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .dd{position:relative}
+  .btn{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;background:#fff;display:flex;justify-content:space-between;cursor:pointer}
+  .list{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.1);overflow:hidden;display:none}
+  .item{padding:12px;cursor:pointer}
+  .item:hover{background:#eff6ff}
+  .muted{color:#6b7280}
+</style>
+
+  <div class="box1">
+    <h2>Custom Dropdown</h2>
+
+    <div class="dd" id="dropdown">
+      <div class="btn" id="ddBtn">
+        <span id="ddValue" class="muted">Select an option</span>
+        <span>▾</span>
+      </div>
+      <div class="list" id="ddList"></div>
+    </div>
+
+    <p>Selected: <b id="selected">None</b></p>
+  </div>
+
+<script>
+  const options = ["Tamil", "English", "Hindi", "Malayalam"];
+  const dd = document.getElementById("dropdown");
+  const btn = document.getElementById("ddBtn");
+  const listt = document.getElementById("ddList");
+  const value = document.getElementById("ddValue");
+  const selected = document.getElementById("selected");
+
+  options.forEach(op => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.textContent = op;
+    div.onclick = () => {
+      value.textContent = op;
+      value.classList.remove("muted");
+      selected.textContent = op;
+      listt.style.display = "none";
+    };
+    listt.appendChild(div);
+  });
+
+  btn.onclick = () => {
+    listt.style.display = (listt.style.display === "block") ? "none" : "block";
+  };
+
+  // click outside close
+  document.addEventListener("click", (e) => {
+    if(!dd.contains(e.target)) listt.style.display = "none";
+  });
+</script>
