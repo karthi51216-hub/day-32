@@ -620,3 +620,2676 @@
     if(!dd.contains(e.target)) listt.style.display = "none";
   });
 </script>
+<hr>
+<hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .bc10-wrap{max-width:900px;margin:auto;display:grid;grid-template-columns:260px 1fr;gap:14px}
+  .bc10-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .bc10-nav button{width:100%;padding:10px;border:0;border-radius:10px;background:#111827;color:#fff;cursor:pointer;margin:6px 0;text-align:left}
+  .bc10-crumb{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .bc10-crumb a{color:#2563eb;text-decoration:none}
+  .bc10-pill{background:#eef2ff;border-radius:999px;padding:6px 10px}
+  .bc10-sep{opacity:.6}
+</style>
+  <div class="bc10-wrap">
+    <div class="bc10-card bc10-nav">
+      <h2>Navigation</h2>
+      <button data-page="Home">Home</button>
+      <button data-page="Products">Products</button>
+      <button data-page="Products > Shoes">Products > Shoes</button>
+      <button data-page="Account">Account</button>
+      <button data-page="Account > Settings">Account > Settings</button>
+    </div>
+
+    <div class="bc10-card">
+      <h2>Breadcrumb</h2>
+      <div class="bc10-crumb" id="bc10Crumb"></div>
+      <hr>
+      <h3 id="bc10Title">Home</h3>
+      <p id="bc10Text">Click navigation buttons.</p>
+    </div>
+  </div>
+
+<script>
+  const crumbEl = document.getElementById("bc10Crumb");
+  const titleE1l = document.getElementById("bc10Title");
+  const textEl = document.getElementById("bc10Text");
+  let path = ["Home"];
+
+  function renderCrumb(){
+    crumbEl.innerHTML = "";
+    path.forEach((p, i) => {
+      const span = document.createElement("span");
+      span.className = "bc10-pill";
+      if(i < path.length - 1){
+        const a = document.createElement("a");
+        a.href = "#";
+        a.textContent = p;
+        a.onclick = (e) => { e.preventDefault(); path = path.slice(0, i+1); renderCrumb(); renderContent(); };
+        span.appendChild(a);
+      } else {
+        span.textContent = p;
+      }
+      crumbEl.appendChild(span);
+      if(i < path.length - 1){
+        const sep = document.createElement("span");
+        sep.className = "bc10-sep";
+        sep.textContent = "›";
+        crumbEl.appendChild(sep);
+      }
+    });
+  }
+
+  function renderContent(){
+    titleE1l.textContent = path[path.length-1];
+    textEl.textContent = "Current path: " + path.join(" > ");
+  }
+
+  document.querySelectorAll(".bc10-nav button").forEach(btn=>{
+    btn.onclick = () => {
+      path = btn.dataset.page.split(">").map(s=>s.trim());
+      renderCrumb(); renderContent();
+    };
+  });
+
+  renderCrumb(); renderContent();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .n11-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .n11-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input,select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  textarea{min-height:110px;resize:vertical}
+  .n11-row{display:flex;gap:10px}
+  .n11-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .n11-danger{background:#ef4444}
+  .n11-list{display:grid;gap:10px}
+  .n11-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .n11-meta{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .n11-tag{font-size:12px;background:#eef2ff;border-radius:999px;padding:4px 8px}
+</style>
+<div class="n11-wrap">
+  <div class="n11-card">
+    <h2>Add Note</h2>
+    <input id="n11Title" placeholder="Title"/>
+    <br><br>
+    <select id="n11Cat">
+      <option value="General">General</option>
+      <option value="Study">Study</option>
+      <option value="Work">Work</option>
+      <option value="Personal">Personal</option>
+    </select>
+    <br><br>
+    <textarea id="n11Body" placeholder="Write note..."></textarea>
+    <br>
+    <button class="n11-btn" id="n11Add">Save Note</button>
+  </div>
+
+  <div class="n11-card">
+    <h2>Notes</h2>
+    <div class="n11-row">
+      <input id="n11Search" placeholder="Search...">
+      <select id="n11Filter">
+        <option value="All">All</option>
+        <option value="General">General</option>
+        <option value="Study">Study</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+      </select>
+    </div>
+    <br>
+    <div class="n11-list" id="n11List"></div>
+  </div>
+</div>
+
+<script>
+  const KEY= "n11_notes_v1";
+  const els = {
+    title: document.getElementById("n11Title"),
+    cat: document.getElementById("n11Cat"),
+    body: document.getElementById("n11Body"),
+    add: document.getElementById("n11Add"),
+    search: document.getElementById("n11Search"),
+    filter: document.getElementById("n11Filter"),
+    list: document.getElementById("n11List"),
+  };
+
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+  function save(notes){ localStorage.setItem(KEY, JSON.stringify(notes)); }
+
+  function render(){
+    const notes = load();
+    const q = els.search.value.trim().toLowerCase();
+    const f = els.filter.value;
+
+    const filtered = notes.filter(n => {
+      const matchQ = !q || (n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q));
+      const matchF = (f === "All") || (n.cat === f);
+      return matchQ && matchF;
+    });
+
+    els.list.innerHTML = "";
+    if(filtered.length === 0){
+      els.list.innerHTML = `<div class="n11-item">No notes found.</div>`;
+      return;
+    }
+
+    filtered.forEach(n=>{
+      const div = document.createElement("div");
+      div.className = "n11-item";
+      div.innerHTML = `
+        <div class="n11-meta">
+          <b>${n.title}</b>
+          <span class="n11-tag">${n.cat}</span>
+        </div>
+        <p>${n.body.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
+        <div class="n11-row">
+          <button class="n11-btn n11-danger">Delete</button>
+        </div>
+      `;
+      div.querySelector("button").onclick = () => {
+        const all = load().filter(x => x.id !== n.id);
+        save(all); render();
+      };
+      els.list.appendChild(div);
+    });
+  }
+
+  els.add.onclick = () => {
+    const t = els.title.value.trim();
+    const b = els.body.value.trim();
+    if(!t || !b) return;
+    const notes = load();
+    notes.unshift({id: crypto.randomUUID(), title:t, body:b, cat:els.cat.value, created: Date.now()});
+    save(notes);
+    els.title.value=""; els.body.value=""; els.cat.value="General";
+    render();
+  };
+
+  els.search.oninput = render;
+  els.filter.onchange = render;
+  render();
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .ex12-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .ex12-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  .ex12-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .ex12-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
+  .ex12-row{display:flex;justify-content:space-between;gap:10px}
+  .ex12-small{color:#6b7280;font-size:13px}
+</style>
+<div class="ex12-wrap">
+  <div class="ex12-card">
+    <h2>Add Expense</h2>
+    <input id="ex12Title" placeholder="Title (e.g., Lunch)">
+    <br><br>
+    <input id="ex12Amt" type="number" placeholder="Amount">
+    <br><br>
+    <select id="ex12Cat">
+      <option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Other</option>
+    </select>
+    <br><br>
+    <button class="ex12-btn" id="ex12Add">Add</button>
+  </div>
+
+  <div class="ex12-card">
+    <h2>Expenses</h2>
+    <div id="ex12List"></div>
+    <hr>
+    <h3>Category Summary</h3>
+    <div id="ex12Summary" class="ex12-small"></div>
+    <h3>Total: ₹ <span id="ex12Total">0</span></h3>
+  </div>
+</div>
+
+<script>
+  const key="ex12_exp_v1";
+  const titleEl=document.getElementById("ex12Title");
+  const amtEl=document.getElementById("ex12Amt");
+  const catEl=document.getElementById("ex12Cat");
+  const addBtn1=document.getElementById("ex12Add");
+  const listEl=document.getElementById("ex12List");
+  const sumEl=document.getElementById("ex12Summary");
+  const totalEl=document.getElementById("ex12Total");
+
+  console.log("ex12 script loaded");
+
+  const load=()=>JSON.parse(localStorage.getItem(key)||"[]");
+  const save=(d)=>localStorage.setItem(key,JSON.stringify(d));
+
+  function render(){
+    const data=load();
+    listEl.innerHTML="";
+    if(!data.length) listEl.innerHTML=`<div class="ex12-item">No expenses yet.</div>`;
+
+    let total=0;
+    const byCat={};
+
+    data.forEach(x=>{
+      total += x.amt;
+      byCat[x.cat]=(byCat[x.cat]||0)+x.amt;
+
+      const div=document.createElement("div");
+      div.className="ex12-item";
+      div.innerHTML=`
+        <div class="ex12-row"><b>${x.title}</b><b>₹ ${x.amt}</b></div>
+        <div class="ex12-row"><span class="ex12-small">${x.cat}</span>
+          <button class="ex12-btn" style="background:#ef4444">Delete</button>
+        </div>
+      `;
+      div.querySelector("button").onclick=()=>{
+        save(load().filter(i=>i.id!==x.id)); render();
+      };
+      listEl.appendChild(div);
+    });
+
+    totalEl.textContent=total;
+
+    sumEl.innerHTML = Object.keys(byCat).length
+      ? Object.entries(byCat).map(([c,v])=>`• ${c}: ₹ ${v}`).join("<br>")
+      : "No summary.";
+  }
+
+  addBtn1.onclick=()=>{
+    try{
+      const t=titleEl.value.trim();
+      const a=Number(amtEl.value);
+      console.log('ex12 add click', {t,a,cat:catEl.value});
+      if(!t || !a || a<=0) return;
+      const data=load();
+      data.unshift({id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36), title:t, amt:a, cat:catEl.value, created:Date.now()});
+      save(data);
+      titleEl.value=""; amtEl.value=""; catEl.value="Food";
+      render();
+    }catch(err){
+      console.error('ex12 add error', err);
+      listEl.innerHTML = `<div class="ex12-item" style="color:red">Error: ${err.message}</div>`;
+    }
+  };
+
+  try{
+    render();
+  }catch(err){
+    console.error('ex12 render error', err);
+    listEl.innerHTML = `<div class="ex12-item" style="color:red">Render error: ${err.message}</div>`;
+  }
+</script>
+
+<hr><hr>
+<!--13-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .st13-card{max-width:720px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .st13-out{margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .st13-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff}
+</style>
+  <div class="st13-card">
+    <h2>Student Result Calculator</h2>
+    <input id="st13Name" placeholder="Student Name">
+    <input id="st13T" type="number" placeholder="Tamil (0-100)">
+    <input id="st13E" type="number" placeholder="English (0-100)">
+    <input id="st13M" type="number" placeholder="Maths (0-100)">
+    <input id="st13S" type="number" placeholder="Science (0-100)">
+    <input id="st13So" type="number" placeholder="Social (0-100)">
+    <button id="st13Calc">Calculate</button>
+
+    <div class="st13-out" id="st13Out">Enter marks and click calculate.</div>
+  </div>
+
+<script>
+  const outt=document.getElementById("st13Out");
+  function grade(avg){
+    if(avg>=90) return "A+";
+    if(avg>=80) return "A";
+    if(avg>=70) return "B";
+    if(avg>=60) return "C";
+    if(avg>=50) return "D";
+    return "F";
+  }
+
+  document.getElementById("st13Calc").onclick=()=>{
+    const name=document.getElementById("st13Name").value.trim()||"Student";
+    const marks=[
+      +document.getElementById("st13T").value,
+      +document.getElementById("st13E").value,
+      +document.getElementById("st13M").value,
+      +document.getElementById("st13S").value,
+      +document.getElementById("st13So").value
+    ];
+
+    if(marks.some(m=>Number.isNaN(m)||m<0||m>100)){
+      outt.textContent="Marks 0 to 100 range la kudu.";
+      return;
+    }
+
+    const total=marks.reduce((a,b)=>a+b,0);
+    const avg=total/marks.length;
+    const g=grade(avg);
+
+    const passAll = marks.every(m=>m>=35);
+    const result = passAll ? "PASS" : "FAIL";
+
+    outt.innerHTML = `
+      <b>${name}</b><br><br>
+      Total: <b>${total}</b> / 500<br>
+      Average: <b>${avg.toFixed(2)}</b><br>
+      Grade: <span class="st13-badge"><b>${g}</b></span><br>
+      Result: <b>${result}</b>
+    `;
+  };
+</script>
+<hr><hr>
+
+
+<!---14-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .c14-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .c14-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0}
+  .c14-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .c14-danger{background:#ef4444}
+  .c14-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
+  .c14-row{display:flex;gap:10px}
+  .c14-small{color:#6b7280;font-size:13px}
+</style>
+<div class="c14-wrap">
+  <div class="c14-card">
+    <h2 id="c14FormTitle">Add Contact</h2>
+    <input id="c14Name" placeholder="Name">
+    <input id="c14Phone" placeholder="Phone">
+    <input id="c14Email" placeholder="Email">
+    <button class="c14-btn" id="c14Save">Save</button>
+    <button class="c14-btn c14-danger" id="c14Cancel" style="display:none;margin-left:8px">Cancel Edit</button>
+  </div>
+
+  <div class="c14-card">
+    <h2>Contacts</h2>
+    <input id="c14Search" placeholder="Search name/phone/email...">
+    <div id="c14List"></div>
+  </div>
+</div>
+
+<script>
+  const KEYY="c14_contacts_v1";
+  const el={
+    formTitle:document.getElementById("c14FormTitle"),
+    name:document.getElementById("c14Name"),
+    phone:document.getElementById("c14Phone"),
+    email:document.getElementById("c14Email"),
+    save:document.getElementById("c14Save"),
+    cancel:document.getElementById("c14Cancel"),
+    search:document.getElementById("c14Search"),
+    list:document.getElementById("c14List")
+  };
+  let editId=null;
+
+  const load=()=>JSON.parse(localStorage.getItem(KEY)||"[]");
+  const save=(d)=>localStorage.setItem(KEY,JSON.stringify(d));
+
+  function resetForm(){
+    editId=null;
+    el.formTitle.textContent="Add Contact";
+    el.name.value=""; el.phone.value=""; el.email.value="";
+    el.cancel.style.display="none";
+  }
+
+  function render(){
+    const q=el.search.value.trim().toLowerCase();
+    const data=load().filter(c=>{
+      const s=(c.name+" "+c.phone+" "+c.email).toLowerCase();
+      return !q || s.includes(q);
+    });
+
+    el.list.innerHTML="";
+    if(!data.length){
+      el.list.innerHTML=`<div class="c14-item">No contacts.</div>`;
+      return;
+    }
+
+    data.forEach(c=>{
+      const div=document.createElement("div");
+      div.className="c14-item";
+      div.innerHTML=`
+        <b>${c.name}</b><br>
+        <span class="c14-small">${c.phone} • ${c.email}</span>
+        <div class="c14-row" style="margin-top:10px">
+          <button class="c14-btn">Edit</button>
+          <button class="c14-btn c14-danger">Delete</button>
+        </div>
+      `;
+      const [editBtn, delBtn]=div.querySelectorAll("button");
+      editBtn.onclick=()=>{
+        editId=c.id;
+        el.formTitle.textContent="Edit Contact";
+        el.name.value=c.name; el.phone.value=c.phone; el.email.value=c.email;
+        el.cancel.style.display="inline-block";
+      };
+      delBtn.onclick=()=>{
+        save(load().filter(x=>x.id!==c.id));
+        if(editId===c.id) resetForm();
+        render();
+      };
+      el.list.appendChild(div);
+    });
+  }
+
+  el.save.onclick=()=>{
+    const name=el.name.value.trim();
+    const phone=el.phone.value.trim();
+    const email=el.email.value.trim();
+    if(!name || !phone) return;
+
+    const data=load();
+    if(editId){
+      const idx=data.findIndex(x=>x.id===editId);
+      if(idx>-1) data[idx]={...data[idx], name, phone, email};
+    } else {
+      data.unshift({id:crypto.randomUUID(), name, phone, email});
+    }
+    save(data);
+    resetForm();
+    render();
+  };
+
+  el.cancel.onclick=resetForm;
+  el.search.oninput=render;
+
+  render();
+</script>
+
+<hr><hr>
+
+<!---15-->
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .pf15-card{max-width:980px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .pf15-row{display:flex;gap:10px;flex-wrap:wrap}
+  input,select{padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  .pf15-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .pf15-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .pf15-tag{font-size:12px;background:#eef2ff;border-radius:999px;padding:4px 8px}
+  @media (max-width:900px){.pf15-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="pf15-card">
+  <h2>Product Filter</h2>
+  <div class="pf15-row">
+    <select id="pf15Cat">
+      <option value="All">All Categories</option>
+      <option value="Clothes">Clothes</option>
+      <option value="Shoes">Shoes</option>
+      <option value="Electronics">Electronics</option>
+    </select>
+    <input id="pf15Min" type="number" placeholder="Min price">
+    <input id="pf15Max" type="number" placeholder="Max price">
+    <input id="pf15Search" placeholder="Search name...">
+  </div>
+
+  <div class="pf15-grid" id="pf15Grid"></div>
+</div>
+
+<script>
+  const product=[
+    {name:"T-Shirt", cat:"Clothes", price:499},
+    {name:"Hoodie", cat:"Clothes", price:1299},
+    {name:"Running Shoes", cat:"Shoes", price:1899},
+    {name:"Sandals", cat:"Shoes", price:699},
+    {name:"Headphones", cat:"Electronics", price:999},
+    {name:"Smart Watch", cat:"Electronics", price:2499},
+  ];
+
+  const els={
+    cat:document.getElementById("pf15Cat"),
+    min:document.getElementById("pf15Min"),
+    max:document.getElementById("pf15Max"),
+    search:document.getElementById("pf15Search"),
+    grid:document.getElementById("pf15Grid"),
+  };
+
+  function render(){
+    const c=els.cat.value;
+    const min=els.min.value ? Number(els.min.value) : -Infinity;
+    const max=els.max.value ? Number(els.max.value) : Infinity;
+    const q=els.search.value.trim().toLowerCase();
+
+    const filtered=product.filter(p=>{
+      const catOk = (c==="All") || (p.cat===c);
+      const priceOk = p.price>=min && p.price<=max;
+      const qOk = !q || p.name.toLowerCase().includes(q);
+      return catOk && priceOk && qOk;
+    });
+
+    els.grid.innerHTML="";
+    if(!filtered.length){
+      els.grid.innerHTML=`<div class="pf15-item">No products found.</div>`;
+      return;
+    }
+
+    filtered.forEach(p=>{
+      const div=document.createElement("div");
+      div.className="pf15-item";
+      div.innerHTML=`<b>${p.name}</b><br><span class="pf15-tag">${p.cat}</span><p>₹ ${p.price}</p>`;
+      els.grid.appendChild(div);
+    });
+  }
+
+  ["change","input"].forEach(ev=>{
+    els.cat.addEventListener(ev, render);
+    els.min.addEventListener(ev, render);
+    els.max.addEventListener(ev, render);
+    els.search.addEventListener(ev, render);
+  });
+
+  render();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .tb16-card{max-width:980px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input,select{padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left}
+  .tb16-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .tb16-btn{padding:8px 10px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .tb16-btn:disabled{opacity:.5;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="tb16-card">
+  <h2>Table + Pagination + Search</h2>
+  <div class="tb16-row">
+    <input id="tb16Search" placeholder="Search name/city...">
+    <select id="tb16PerPage">
+      <option value="5">5 / page</option>
+      <option value="10" selected>10 / page</option>
+      <option value="15">15 / page</option>
+    </select>
+  </div>
+
+  <table>
+    <thead><tr><th>Name</th><th>City</th><th>Score</th></tr></thead>
+    <tbody id="tb16Body"></tbody>
+  </table>
+
+  <div class="tb16-row" style="justify-content:space-between;margin-top:12px">
+    <button class="tb16-btn" id="tb16Prev">Prev</button>
+    <div id="tb16Info"></div>
+    <button class="tb16-btn" id="tb16Next">Next</button>
+  </div>
+</div>
+
+<script>
+  const dataa = Array.from({length:57}, (_,i)=>({
+    name:"Student "+(i+1),
+    city:["Salem","Chennai","Madurai","Coimbatore"][i%4],
+    score: Math.floor(Math.random()*51)+50
+  }));
+
+  const el={
+    search:document.getElementById("tb16Search"),
+    per:document.getElementById("tb16PerPage"),
+    body:document.getElementById("tb16Body"),
+    prev:document.getElementById("tb16Prev"),
+    next:document.getElementById("tb16Next"),
+    info:document.getElementById("tb16Info")
+  };
+
+  let page=1;
+
+  function getFiltered(){
+    const q=el.search.value.trim().toLowerCase();
+    return data.filter(r=>{
+      const s=(r.name+" "+r.city).toLowerCase();
+      return !q || s.includes(q);
+    });
+  }
+
+  function render(){
+    const per=Number(el.per.value);
+    const rows=getFiltered();
+    const totalPages=Math.max(1, Math.ceil(rows.length/per));
+    page=Math.min(page,totalPages);
+
+    const start=(page-1)*per;
+    const chunk=rows.slice(start,start+per);
+
+    el.body.innerHTML="";
+    chunk.forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${r.name}</td><td>${r.city}</td><td>${r.score}</td>`;
+      el.body.appendChild(tr);
+    });
+
+    el.info.textContent = `Page ${page} / ${totalPages} • ${rows.length} results`;
+    el.prev.disabled = page===1;
+    el.next.disabled = page===totalPages;
+  }
+
+  el.prev.onclick=()=>{page--; render();};
+  el.next.onclick=()=>{page++; render();};
+  el.search.oninput=()=>{page=1; render();};
+  el.per.onchange=()=>{page=1; render();};
+
+  render();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .pm17-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .pm17-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .pm17-danger{background:#ef4444}
+  .pm17-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
+  .pm17-small{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="pm17-wrap">
+  <div class="pm17-card">
+    <h2>Master Password</h2>
+    <input id="pm17Master" type="password" placeholder="Set / Enter master password">
+    <p class="pm17-small">Same master password use pannina thaan decrypt panna mudiyum.</p>
+    <hr>
+    <h2>Add Entry</h2>
+    <input id="pm17Site" placeholder="Site (e.g., gmail)">
+    <input id="pm17User" placeholder="Username">
+    <input id="pm17Pass" type="password" placeholder="Password">
+    <button id="pm17Save">Encrypt & Save</button>
+  </div>
+
+  <div class="pm17-card">
+    <h2>Saved Entries</h2>
+    <input id="pm17Search" placeholder="Search site...">
+    <div id="pm17List"></div>
+  </div>
+</div>
+
+<script>
+  const K="pm17_entries_v1";
+  const el={
+    master:document.getElementById("pm17Master"),
+    site:document.getElementById("pm17Site"),
+    user:document.getElementById("pm17User"),
+    pass:document.getElementById("pm17Pass"),
+    save:document.getElementById("pm17Save"),
+    search:document.getElementById("pm17Search"),
+    list:document.getElementById("pm17List"),
+  };
+
+  const load=()=>JSON.parse(localStorage.getItem(KEY)||"[]");
+  const save=(d)=>localStorage.setItem(KEY,JSON.stringify(d));
+
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  function b64(buf){
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+  function unb64(s){
+    const bin = atob(s);
+    const bytes = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function deriveKey(master, salt){
+    const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(master), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      {name:"PBKDF2", salt, iterations:100000, hash:"SHA-256"},
+      keyMaterial,
+      {name:"AES-GCM", length:256},
+      false,
+      ["encrypt","decrypt"]
+    );
+  }
+
+  async function encryptText(master, text){
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(master, salt);
+    const cipher = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, enc.encode(text));
+    return {salt:b64(salt), iv:b64(iv), cipher:b64(cipher)};
+  }
+
+  async function decryptText(master, payload){
+    const salt = new Uint8Array(unb64(payload.salt));
+    const iv = new Uint8Array(unb64(payload.iv));
+    const key = await deriveKey(master, salt);
+    const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, unb64(payload.cipher));
+    return dec.decode(plain);
+  }
+
+  function render(){
+    const q=el.search.value.trim().toLowerCase();
+    const data=load().filter(x=>!q || x.site.toLowerCase().includes(q));
+    el.list.innerHTML="";
+    if(!data.length){ el.list.innerHTML=`<div class="pm17-item">No entries.</div>`; return; }
+
+    data.forEach(x=>{
+      const div=document.createElement("div");
+      div.className="pm17-item";
+      div.innerHTML=`
+        <b>${x.site}</b><br>
+        <span class="pm17-small">Username: ${x.username}</span><br><br>
+        <button class="pm17-btnShow">Show Password</button>
+        <button class="pm17-danger pm17-btnDel">Delete</button>
+        <div class="pm17-small" style="margin-top:8px" id="pm17Out-${x.id}"></div>
+      `;
+      div.querySelector(".pm17-btnDel").onclick=()=>{
+        save(load().filter(i=>i.id!==x.id)); render();
+      };
+      div.querySelector(".pm17-btnShow").onclick=async ()=>{
+        const master=el.master.value;
+        const out=document.getElementById("pm17Out-"+x.id);
+        if(!master){ out.textContent="Enter master password first."; return; }
+        try{
+          const plain = await decryptText(master, x.secret);
+          out.textContent = "Password: " + plain;
+        }catch(e){
+          out.textContent = "Wrong master password / cannot decrypt.";
+        }
+      };
+      el.list.appendChild(div);
+    });
+  }
+
+  el.save.onclick=async ()=>{
+    const master=el.master.value;
+    const site=el.site.value.trim();
+    const user=el.user.value.trim();
+    const pass=el.pass.value;
+    if(!master || !site || !user || !pass) return;
+
+    const secret = await encryptText(master, pass);
+    const data=load();
+    data.unshift({id:crypto.randomUUID(), site, username:user, secret});
+    save(data);
+
+    el.site.value=""; el.user.value=""; el.pass.value="";
+    render();
+  };
+
+  el.search.oninput=render;
+  render();
+</script>
+
+<hr><hr>
+
+<!--18-->
+
+
+<div class="bm18fx-wrap">
+  <div class="bm18fx-card">
+    <h2>Add Bookmark</h2>
+    <input id="bm18fx_title" placeholder="Title">
+    <input id="bm18fx_url" placeholder="URL (https://...)">
+    <button id="bm18fx_addBtn">Save</button>
+    <p class="bm18fx-small">Tip: https:// illana auto add pannum.</p>
+  </div>
+
+  <div class="bm18fx-card">
+    <h2>Bookmarks</h2>
+    <input id="bm18fx_search" placeholder="Search...">
+    <div id="bm18fx_list"></div>
+  </div>
+</div>
+
+<script>
+  // ✅ Unique localStorage key (no conflict)
+  const BM18FX_STORAGE_KEY = "bm18fx_bookmarks_v1";
+
+  // ✅ Unique element refs
+  const bm18fxElTitle  = document.getElementById("bm18fx_title");
+  const bm18fxElUrl    = document.getElementById("bm18fx_url");
+  const bm18fxElAddBtn = document.getElementById("bm18fx_addBtn");
+  const bm18fxElSearch = document.getElementById("bm18fx_search");
+  const bm18fxElList   = document.getElementById("bm18fx_list");
+
+  // ✅ Safe load/save helpers
+  function bm18fxLoadBookmarks(){
+    try {
+      return JSON.parse(localStorage.getItem(BM18FX_STORAGE_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function bm18fxSaveBookmarks(bookmarksArr){
+    localStorage.setItem(BM18FX_STORAGE_KEY, JSON.stringify(bookmarksArr));
+  }
+
+  // ✅ URL normalize
+  function bm18fxFixUrl(rawUrl){
+    let u = (rawUrl || "").trim();
+    if(!u) return "";
+    if(!/^https?:\/\//i.test(u)) u = "https://" + u;
+    return u;
+  }
+
+  // ✅ Render list
+  function bm18fxRender(){
+    const query = bm18fxElSearch.value.trim().toLowerCase();
+    const all = bm18fxLoadBookmarks();
+
+    const visible = all.filter(b => {
+      const text = (b.title + " " + b.url).toLowerCase();
+      return !query || text.includes(query);
+    });
+
+    bm18fxElList.innerHTML = "";
+
+    if(visible.length === 0){
+      bm18fxElList.innerHTML = `<div class="bm18fx-item">No bookmarks found.</div>`;
+      return;
+    }
+
+    visible.forEach(b => {
+      const div = document.createElement("div");
+      div.className = "bm18fx-item";
+      div.innerHTML = `
+        <b>${b.title}</b><br>
+        <a href="${b.url}" target="_blank" rel="noopener">${b.url}</a>
+        <div style="margin-top:10px;display:flex;gap:10px">
+          <button class="bm18fx-danger" data-del="${b.id}">Delete</button>
+        </div>
+      `;
+      bm18fxElList.appendChild(div);
+    });
+
+    // ✅ Event delegation for delete (works for dynamic nodes)
+    bm18fxElList.querySelectorAll("button[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del");
+        const updated = bm18fxLoadBookmarks().filter(x => x.id !== id);
+        bm18fxSaveBookmarks(updated);
+        bm18fxRender();
+      });
+    });
+  }
+
+  // ✅ Add bookmark
+  bm18fxElAddBtn.addEventListener("click", () => {
+    const title = bm18fxElTitle.value.trim();
+    const url = bm18fxFixUrl(bm18fxElUrl.value);
+
+    if(!title || !url){
+      alert("Title and URL both required.");
+      return;
+    }
+
+    const all = bm18fxLoadBookmarks();
+    all.unshift({ id: crypto.randomUUID(), title, url, created: Date.now() });
+    bm18fxSaveBookmarks(all);
+
+    bm18fxElTitle.value = "";
+    bm18fxElUrl.value = "";
+    bm18fxRender();
+  });
+
+  // ✅ Live search
+  bm18fxElSearch.addEventListener("input", bm18fxRender);
+
+  // ✅ Initial render
+  bm18fxRender();
+</script>
+
+<hr><hr>
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t20-card{max-width:760px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t20-inp{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:8px 0}
+  .t20-ta{min-height:130px;resize:vertical}
+  .t20-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer;margin-right:8px}
+  .t20-danger{background:#ef4444}
+  .t20-small{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="t20-card">
+  <h2>Auto-save Draft Form</h2>
+  <p class="t20-small">Type panna udane draft localStorage la save aagum.</p>
+
+  <input class="t20-inp" id="t20Name" placeholder="Name">
+  <input class="t20-inp" id="t20Email" placeholder="Email">
+  <textarea class="t20-inp t20-ta" id="t20Msg" placeholder="Message"></textarea>
+
+  <button class="t20-btn" id="t20Submit">Submit (demo)</button>
+  <button class="t20-btn t20-danger" id="t20Clear">Clear Draft</button>
+  <p class="t20-small" id="t20Status"></p>
+</div>
+
+<script>
+  const T20_KEY="t20_draft_v1";
+  const t20El={n:document.getElementById("t20Name"),e:document.getElementById("t20Email"),
+               m:document.getElementById("t20Msg"),st:document.getElementById("t20Status")};
+
+  function t20Load(){ return JSON.parse(localStorage.getItem(T20_KEY)||"{}"); }
+  function t20Save(){
+    const d={name:t20El.n.value,email:t20El.e.value,msg:t20El.m.value,ts:Date.now()};
+    localStorage.setItem(T20_KEY, JSON.stringify(d));
+    t20El.st.textContent="Draft saved: "+new Date(d.ts).toLocaleTimeString();
+  }
+  function t20Restore(){
+    const d=t20Load(); if(!d.ts) return;
+    t20El.n.value=d.name||""; t20El.e.value=d.email||""; t20El.m.value=d.msg||"";
+    t20El.st.textContent="Draft restored: "+new Date(d.ts).toLocaleString();
+  }
+
+  ["input"].forEach(ev=>{
+    t20El.n.addEventListener(ev,t20Save);
+    t20El.e.addEventListener(ev,t20Save);
+    t20El.m.addEventListener(ev,t20Save);
+  });
+
+  document.getElementById("t20Clear").onclick=()=>{
+    localStorage.removeItem(T20_KEY);
+    t20El.n.value=""; t20El.e.value=""; t20El.m.value="";
+    t20El.st.textContent="Draft cleared.";
+  };
+
+  document.getElementById("t20Submit").onclick=()=>{
+    alert("Submitted (demo). Draft cleared.");
+    localStorage.removeItem(T20_KEY);
+    t20El.n.value=""; t20El.e.value=""; t20El.m.value="";
+    t20El.st.textContent="Submitted & cleared.";
+  };
+
+  t20Restore();
+</script>
+
+<hr><hr>
+
+<!--21-->
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t21-card{max-width:820px;margin:auto;background:#fff;border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t21-view{position:relative;border-radius:14px;overflow:hidden;height:360px;background:#111827}
+  .t21-track{display:flex;height:100%;transition:transform .45s ease}
+  .t21-slide{min-width:100%;display:grid;place-items:center;color:#fff;font-size:42px;font-weight:800}
+  .t21-btn{position:absolute;top:50%;transform:translateY(-50%);border:0;border-radius:12px;padding:10px 12px;cursor:pointer;background:rgba(255,255,255,.9)}
+  .t21-prev{left:10px} .t21-next{right:10px}
+  .t21-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  .t21-dot{width:10px;height:10px;border-radius:999px;background:#cbd5e1;cursor:pointer}
+  .t21-dot.isOn{background:#2563eb}
+</style>
+</head>
+<body>
+<div class="t21-card">
+  <h2>Image Carousel</h2>
+  <div class="t21-view">
+    <div class="t21-track" id="t21Track">
+      <div class="t21-slide" style="background:#2563eb">1</div>
+      <div class="t21-slide" style="background:#16a34a">2</div>
+      <div class="t21-slide" style="background:#f59e0b">3</div>
+      <div class="t21-slide" style="background:#ef4444">4</div>
+    </div>
+    <button class="t21-btn t21-prev" id="t21Prev">◀</button>
+    <button class="t21-btn t21-next" id="t21Next">▶</button>
+  </div>
+  <div class="t21-dots" id="t21Dots"></div>
+</div>
+
+<script>
+  const t21Track=document.getElementById("t21Track");
+  const t21Dots=document.getElementById("t21Dots");
+  const t21Count=t21Track.children.length;
+  let t21Idx=0, t21Timer=null;
+
+  function t21Render(){
+    t21Track.style.transform=`translateX(-${t21Idx*100}%)`;
+    [...t21Dots.children].forEach((d,i)=>d.classList.toggle("isOn", i===t21Idx));
+  }
+  function t21Go(i){
+    t21Idx=(i+t21Count)%t21Count;
+    t21Render();
+    t21Restart();
+  }
+  function t21Start(){
+    t21Timer=setInterval(()=>t21Go(t21Idx+1), 2500);
+  }
+  function t21Stop(){ if(t21Timer) clearInterval(t21Timer); t21Timer=null; }
+  function t21Restart(){ t21Stop(); t21Start(); }
+
+  for(let i=0;i<t21Count;i++){
+    const dot=document.createElement("div");
+    dot.className="t21-dot";
+    dot.onclick=()=>t21Go(i);
+    t21Dots.appendChild(dot);
+  }
+
+  document.getElementById("t21Prev").onclick=()=>t21Go(t21Idx-1);
+  document.getElementById("t21Next").onclick=()=>t21Go(t21Idx+1);
+
+  t21Render(); t21Start();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0}
+  .t22-bar{position:fixed;top:0;left:0;height:6px;width:0;background:#2563eb;z-index:99}
+  .t22-wrap{padding:30px 20px;background:#f4f6fb}
+  .t22-card{max-width:820px;margin:20px auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+<div class="t22-bar" id="t22Bar"></div>
+<div class="t22-wrap">
+  <div class="t22-card"><h2>Scroll down</h2><p>Progress bar top la move aagum.</p></div>
+  <div class="t22-card"><p>Lorem ipsum dolor sit amet…</p><p style="height:1200px"></p></div>
+  <div class="t22-card"><p style="height:1200px"></p></div>
+</div>
+
+<script>
+  const t22Bar=document.getElementById("t22Bar");
+  window.addEventListener("scroll", ()=>{
+    const doc=document.documentElement;
+    const sc=doc.scrollTop;
+    const max=doc.scrollHeight-doc.clientHeight;
+    const pct=max? (sc/max)*100 : 0;
+    t22Bar.style.width=pct+"%";
+  });
+</script>
+<hr><hr>
+
+<!--23-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#0b1220;color:#8f9bb3}
+  .t23-hero{position:relative;height:90vh;overflow:hidden}
+  .t23-layer{position:absolute;inset:-10%;background-size:cover;background-position:center;will-change:transform}
+  .t23-bg{background-image:linear-gradient(120deg,#2563eb,#111827)}
+  .t23-mid{background-image:radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 55%)}
+  .t23-fg{background-image:radial-gradient(circle at 70% 60%, rgba(245,158,11,.22), transparent 55%)}
+  .t23-content{position:relative;z-index:2;display:grid;place-items:center;height:100%;text-align:center;padding:20px}
+  .t23-content h1{font-size:48px;margin:0}
+  .t23-content p{max-width:680px;opacity:.85}
+  .t23-section{background:#f4f6fb;color:#0f172a;padding:50px 20px}
+  .t23-card{max-width:900px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+<header class="t23-hero">
+  <div class="t23-layer t23-bg" id="t23Bg"></div>
+  <div class="t23-layer t23-mid" id="t23Mid"></div>
+  <div class="t23-layer t23-fg" id="t23Fg"></div>
+  <div class="t23-content">
+    <div>
+      <h1>Parallax Landing</h1>
+      <p>Scroll panna layers different speed la move aagum.</p>
+    </div>
+  </div>
+</header>
+
+<section class="t23-section">
+  <div class="t23-card"><h2>Content</h2><p style="height:900px">Scroll more…</p></div>
+</section>
+
+<script>
+  const t23Bg=document.getElementById("t23Bg");
+  const t23Mid=document.getElementById("t23Mid");
+  const t23Fg=document.getElementById("t23Fg");
+
+  window.addEventListener("scroll", ()=>{
+    const y=window.scrollY;
+    t23Bg.style.transform=`translateY(${y*0.15}px)`;
+    t23Mid.style.transform=`translateY(${y*0.30}px)`;
+    t23Fg.style.transform=`translateY(${y*0.45}px)`;
+  });
+</script>
+
+<hr><hr>
+
+<!--24-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t24-card{max-width:820px;margin:18px auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t24-skill{margin:14px 0}
+  .t24-row{display:flex;justify-content:space-between}
+  .t24-bar{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:8px}
+  .t24-fill{height:100%;width:0;background:#2563eb;border-radius:999px;transition:width 1.2s ease}
+  .t24-spacer{height:650px}
+</style>
+
+<div class="t24-card"><h2>Scroll down to trigger animation</h2></div>
+<div class="t24-spacer"></div>
+
+<div class="t24-card" id="t24Box">
+  <h2>My Skills</h2>
+
+  <div class="t24-skill" data-pct="90">
+    <div class="t24-row"><b>HTML</b><span>90%</span></div>
+    <div class="t24-bar"><div class="t24-fill"></div></div>
+  </div>
+
+  <div class="t24-skill" data-pct="80">
+    <div class="t24-row"><b>CSS</b><span>80%</span></div>
+    <div class="t24-bar"><div class="t24-fill"></div></div>
+  </div>
+
+  <div class="t24-skill" data-pct="70">
+    <div class="t24-row"><b>JavaScript</b><span>70%</span></div>
+    <div class="t24-bar"><div class="t24-fill"></div></div>
+  </div>
+</div>
+
+<script>
+  const t24Box=document.getElementById("t24Box");
+  let t24Done=false;
+
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting && !t24Done){
+        t24Done=true;
+        document.querySelectorAll(".t24-skill").forEach(s=>{
+          const pct=s.getAttribute("data-pct");
+          s.querySelector(".t24-fill").style.width=pct+"%";
+        });
+      }
+    });
+  },{threshold:0.35});
+
+  obs.observe(t24Box);
+</script>
+<hr><hr>
+
+<!--25-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px;height:200vh}
+  .t25-fab{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:999px;border:0;background:#2563eb;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 12px 26px rgba(0,0,0,.18)}
+  .t25-panel{position:fixed;right:18px;bottom:84px;width:320px;max-height:420px;background:#fff;border-radius:16px;box-shadow:0 14px 30px rgba(0,0,0,.18);overflow:hidden;display:none}
+  .t25-panel.isOpen{display:block}
+  .t25-head{background:#111827;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .t25-body{padding:12px;display:grid;gap:10px;max-height:290px;overflow:auto}
+  .t25-bubble{padding:10px 12px;border-radius:14px;max-width:85%}
+  .t25-me{background:#2563eb;color:#fff;justify-self:end}
+  .t25-bot{background:#f1f5f9;color:#0f172a}
+  .t25-foot{padding:10px;border-top:1px solid #e5e7eb;display:flex;gap:8px}
+  .t25-input{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:12px}
+  .t25-send{border:0;border-radius:12px;padding:10px 12px;background:#2563eb;color:#fff;cursor:pointer}
+</style>
+
+<h2>Scroll and open chat widget</h2>
+
+<button class="t25-fab" id="t25Fab">💬</button>
+
+<div class="t25-panel" id="t25Panel">
+  <div class="t25-head">
+    <b>Support</b>
+    <button id="t25Close" style="border:0;background:transparent;color:#fff;font-size:18px;cursor:pointer">✕</button>
+  </div>
+  <div class="t25-body" id="t25Body">
+    <div class="t25-bubble t25-bot">Hi! How can I help?</div>
+  </div>
+  <div class="t25-foot">
+    <input class="t25-input" id="t25Msg" placeholder="Type message...">
+    <button class="t25-send" id="t25Send">Send</button>
+  </div>
+</div>
+
+<script>
+  const t25Panel=document.getElementById("t25Panel");
+  const t25Body=document.getElementById("t25Body");
+  const t25Msg=document.getElementById("t25Msg");
+
+  document.getElementById("t25Fab").onclick=()=>t25Panel.classList.toggle("isOpen");
+  document.getElementById("t25Close").onclick=()=>t25Panel.classList.remove("isOpen");
+
+  function t25Add(text, who){
+    const div=document.createElement("div");
+    div.className="t25-bubble "+(who==="me"?"t25-me":"t25-bot");
+    div.textContent=text;
+    t25Body.appendChild(div);
+    t25Body.scrollTop=t25Body.scrollHeight;
+  }
+
+  document.getElementById("t25Send").onclick=()=>{
+    const t=t25Msg.value.trim(); if(!t) return;
+    t25Add(t,"me"); t25Msg.value="";
+    setTimeout(()=>t25Add("Got it ✅ (demo reply)","bot"), 600);
+  };
+</script>
+
+<hr><hr>
+
+<!--26-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+ 
+  .t26-box{max-width:860px;text-align:center}
+  .t26-title{font-size:44px;margin:0 0 10px}
+  .t26-line{font-size:22px;opacity:.9}
+  .t26-caret{display:inline-block;width:10px;animation:t26blink .8s infinite}
+  @keyframes t26blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+  <div class="t26-box">
+    <h1 class="t26-title">I build <span id="t26Word"></span><span class="t26-caret">|</span></h1>
+    <div class="t26-line">Dynamic array text type/delete.</div>
+  </div>
+
+<script>
+  const t26Words=["Websites","Dashboards","Landing Pages","Apps"];
+  const el=document.getElementById("t26Word");
+  let i=0, j=0, deleting=false;
+
+  function tick(){ hj  
+    const word=t26Words[i];
+    if(!deleting){
+      j++;
+      el.textContent=word.slice(0,j);
+      if(j===word.length){ deleting=true; setTimeout(tick,900); return; }
+    } else {
+      j--;
+      el.textContent=word.slice(0,j);
+      if(j===0){ deleting=false; i=(i+1)%t26Words.length; }
+    }
+    setTimeout(tick, deleting?60:90);
+  }
+  tick();
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t27-card{max-width:820px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t27-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer;margin-right:8px}
+  .t27-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px}
+  .t27-overlay.isOpen{display:flex}
+  .t27-modal{width:min(520px, 96%);background:#fff;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.22);overflow:hidden}
+  .t27-head{background:#111827;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .t27-body{padding:14px}
+  .t27-close{border:0;background:transparent;color:#fff;font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="t27-card">
+  <h2>Multiple Modals</h2>
+  <button class="t27-btn" data-open="t27M1">Open Modal 1</button>
+  <button class="t27-btn" data-open="t27M2">Open Modal 2</button>
+</div>
+
+<div class="t27-overlay" id="t27M1">
+  <div class="t27-modal">
+    <div class="t27-head"><b>Modal 1</b><button class="t27-close" data-close>✕</button></div>
+    <div class="t27-body">This is modal 1 content.</div>
+  </div>
+</div>
+
+<div class="t27-overlay" id="t27M2">
+  <div class="t27-modal">
+    <div class="t27-head"><b>Modal 2</b><button class="t27-close" data-close>✕</button></div>
+    <div class="t27-body">This is modal 2 content.</div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll("[data-open]").forEach(btn=>{
+    btn.onclick=()=> document.getElementById(btn.dataset.open).classList.add("isOpen");
+  });
+
+  document.querySelectorAll(".t27-overlay").forEach(ov=>{
+    ov.addEventListener("click",(e)=>{
+      if(e.target===ov) ov.classList.remove("isOpen"); // click outside close
+    });
+    ov.querySelectorAll("[data-close]").forEach(c=>c.onclick=()=>ov.classList.remove("isOpen"));
+  });
+
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape") document.querySelectorAll(".t27-overlay.isOpen").forEach(x=>x.classList.remove("isOpen"));
+  });
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t28-card{max-width:820px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t28-tag{display:inline-block;padding:8px 10px;border-radius:999px;background:#eef2ff;cursor:help;margin:6px}
+  .t28-tip{position:fixed;z-index:99;display:none;padding:8px 10px;border-radius:10px;background:#111827;color:#fff;font-size:13px;max-width:220px;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="t28-card">
+  <h2>Tooltip (JS only)</h2>
+  <span class="t28-tag" data-tip="This is tooltip for HTML">HTML</span>
+  <span class="t28-tag" data-tip="This is tooltip for CSS">CSS</span>
+  <span class="t28-tag" data-tip="This is tooltip for JavaScript">JavaScript</span>
+</div>
+
+<div class="t28-tip" id="t28Tip"></div>
+
+<script>
+  const tip=document.getElementById("t28Tip");
+
+  function showTip(text,x,y){
+    tip.textContent=text;
+    tip.style.display="block";
+    const pad=12;
+    tip.style.left=(x+pad)+"px";
+    tip.style.top=(y+pad)+"px";
+  }
+  function hideTip(){ tip.style.display="none"; }
+
+  document.querySelectorAll("[data-tip]").forEach(el=>{
+    el.addEventListener("mouseenter",(e)=>showTip(el.dataset.tip,e.clientX,e.clientY));
+    el.addEventListener("mousemove",(e)=>showTip(el.dataset.tip,e.clientX,e.clientY));
+    el.addEventListener("mouseleave",hideTip);
+  });
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t29-card{max-width:820px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t29-item{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:10px 0}
+  .t29-head{padding:12px 14px;background:#f8fafc;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+  .t29-body{height:0;overflow:hidden;transition:height .35s ease}
+  .t29-inner{padding:12px 14px}
+</style>
+
+<div class="t29-card">
+  <h2>Accordion</h2>
+
+  <div class="t29-item">
+    <div class="t29-head">What is HTML? <span>+</span></div>
+    <div class="t29-body"><div class="t29-inner">HTML is markup language.</div></div>
+  </div>
+
+  <div class="t29-item">
+    <div class="t29-head">What is CSS? <span>+</span></div>
+    <div class="t29-body"><div class="t29-inner">CSS styles the page.</div></div>
+  </div>
+
+  <div class="t29-item">
+    <div class="t29-head">What is JS? <span>+</span></div>
+    <div class="t29-body"><div class="t29-inner">JS makes page interactive.</div></div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".t29-item").forEach(item=>{
+    const head=item.querySelector(".t29-head");
+    const body=item.querySelector(".t29-body");
+    const icon=head.querySelector("span");
+
+    head.onclick=()=>{
+      const isOpen = body.style.height && body.style.height !== "0px";
+
+      // close all (optional)
+      document.querySelectorAll(".t29-body").forEach(b=>{
+        b.style.height="0px";
+        b.parentElement.querySelector(".t29-head span").textContent="+";
+      });
+
+      if(!isOpen){
+        body.style.height = body.scrollHeight + "px";
+        icon.textContent="−";
+      }
+    };
+  });
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t30-card{max-width:920px;margin:auto;background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t30-nav{display:flex;gap:10px;flex-wrap:wrap}
+  .t30-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .t30-view{position:relative;margin-top:14px;min-height:220px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}
+  .t30-page{position:absolute;inset:0;padding:14px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .35s ease, transform .35s ease}
+  .t30-page.isActive{opacity:1;transform:translateY(0);pointer-events:auto}
+</style>
+
+<div class="t30-card">
+  <h2>Page Transition (Single HTML)</h2>
+  <div class="t30-nav">
+    <button class="t30-btn" data-go="t30Home">Home</button>
+    <button class="t30-btn" data-go="t30About">About</button>
+    <button class="t30-btn" data-go="t30Contact">Contact</button>
+  </div>
+
+  <div class="t30-view">
+    <div class="t30-page isActive" id="t30Home">
+      <h3>Home</h3><p>This is home page content.</p>
+    </div>
+    <div class="t30-page" id="t30About">
+      <h3>About</h3><p>About page content with fade transition.</p>
+    </div>
+    <div class="t30-page" id="t30Contact">
+      <h3>Contact</h3><p>Contact page content here.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pages=[...document.querySelectorAll(".t30-page")];
+
+  function show(id){
+    pages.forEach(p=>p.classList.toggle("isActive", p.id===id));
+  }
+
+  document.querySelectorAll("[data-go]").forEach(btn=>{
+    btn.onclick=()=>show(btn.dataset.go);
+  });
+</script>
+<hr><hr>
+
+<!--31-->
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .w31-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .w31-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .w31-big{font-size:46px;font-weight:800;margin:10px 0}
+  .w31-pill{display:inline-block;background:#eef2ff;padding:6px 10px;border-radius:999px}
+  .w31-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .w31-mini{border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+  .w31-muted{color:#6b7280;font-size:13px}
+  @media(max-width:820px){.w31-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<div class="w31-card">
+  <div class="w31-top">
+    <div>
+      <h2 style="margin:0" id="w31City">Salem</h2>
+      <div class="w31-muted" id="w31Date"></div>
+      <span class="w31-pill" id="w31Cond">Sunny</span>
+    </div>
+    <div style="text-align:right">
+      <div class="w31-big" id="w31Temp">34°C</div>
+      <div class="w31-muted" id="w31Meta">Humidity 40% • Wind 12 km/h</div>
+    </div>
+  </div>
+
+  <h3 style="margin:18px 0 8px">Next Hours</h3>
+  <div class="w31-grid" id="w31Hours"></div>
+</div>
+
+<script>
+  const w31Dummy = {
+    city:"Salem",
+    condition:"Partly Cloudy",
+    tempC:34,
+    humidity:40,
+    windKmph:12,
+    updatedAt:Date.now(),
+    hours:[
+      {t:"7 PM", c:33, cond:"Cloudy"},
+      {t:"8 PM", c:32, cond:"Cloudy"},
+      {t:"9 PM", c:31, cond:"Clear"},
+      {t:"10 PM", c:30, cond:"Clear"},
+      {t:"11 PM", c:29, cond:"Clear"},
+      {t:"12 AM", c:28, cond:"Clear"},
+      {t:"1 AM", c:28, cond:"Clear"},
+      {t:"2 AM", c:27, cond:"Clear"},
+    ]
+  };
+
+  document.getElementById("w31City").textContent = w31Dummy.city;
+  document.getElementById("w31Cond").textContent = w31Dummy.condition;
+  document.getElementById("w31Temp").textContent = w31Dummy.tempC + "°C";
+  document.getElementById("w31Meta").textContent =
+    `Humidity ${w31Dummy.humidity}% • Wind ${w31Dummy.windKmph} km/h`;
+  document.getElementById("w31Date").textContent =
+    "Updated: " + new Date(w31Dummy.updatedAt).toLocaleString();
+
+  const hoursEl=document.getElementById("w31Hours");
+  w31Dummy.hours.forEach(h=>{
+    const div=document.createElement("div");
+    div.className="w31-mini";
+    div.innerHTML=`<b>${h.t}</b><div style="font-size:24px;font-weight:700">${h.c}°C</div>
+                   <div class="w31-muted">${h.cond}</div>`;
+    hoursEl.appendChild(div);
+  });
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .v32-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .v32-opt{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
+  .v32-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .v32-btn{padding:8px 10px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .v32-bar{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:10px}
+  .v32-fill{height:100%;width:0;background:#16a34a;transition:width .35s ease}
+  .v32-muted{color:#6b7280;font-size:13px}
+</style>
+
+<div class="v32-card">
+  <h2>Vote: Best Language?</h2>
+  <p class="v32-muted">Vote click pannina percent bars live update aagum.</p>
+  <div id="v32List"></div>
+</div>
+
+<script>
+  const v32Options=[
+    {id:"html", name:"HTML", votes:5},
+    {id:"css", name:"CSS", votes:3},
+    {id:"js", name:"JavaScript", votes:7},
+    {id:"py", name:"Python", votes:4},
+  ];
+  const list1=document.getElementById("v32List");
+
+  function totalVotes(){ return v32Options.reduce((a,b)=>a+b.votes,0); }
+
+  function render(){
+    list1.innerHTML="";
+    const total=totalVotes() || 1;
+
+    v32Options.forEach(o=>{
+      const pct=Math.round((o.votes/total)*100);
+      const div=document.createElement("div");
+      div.className="v32-opt";
+      div.innerHTML=`
+        <div class="v32-row">
+          <b>${o.name}</b>
+          <div>
+            <span class="v32-muted">${o.votes} votes • ${pct}%</span>
+            <button class="v32-btn" data-id="${o.id}">Vote</button>
+          </div>
+        </div>
+        <div class="v32-bar"><div class="v32-fill" style="width:${pct}%"></div></div>
+      `;
+      list.appendChild(div);
+    });
+
+    list.querySelectorAll("button[data-id]").forEach(btn=>{
+      btn.onclick=()=>{
+        const id=btn.dataset.id;
+        const opt=v32Options.find(x=>x.id===id);
+        opt.votes++;
+        render();
+      };
+    });
+  }
+  render();
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .q33-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .q33-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+  .q33-pill{background:#111827;color:#fff;border-radius:999px;padding:6px 10px}
+  .q33-opt{border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:10px 0;cursor:pointer}
+  .q33-opt.isSel{border-color:#2563eb;background:#eff6ff}
+  .q33-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .q33-muted{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="q33-card">
+  <div class="q33-top">
+    <h2 style="margin:0">Quiz</h2>
+    <span class="q33-pill">Time: <b id="q33Time">30</b>s</span>
+  </div>
+  <p class="q33-muted">Correct +4, Wrong -1, Unanswered 0</p>
+  <div id="q33Box"></div>
+  <button class="q33-btn" id="q33Next">Next</button>
+</div>
+
+<script>
+  const q33Data=[
+    {q:"2 + 2 = ?", opts:["3","4","5","6"], ans:1},
+    {q:"CSS stands for?", opts:["C Style Sheet","Cascading Style Sheets","Color Style System","None"], ans:1},
+    {q:"JS keyword for constant?", opts:["var","let","const","fixed"], ans:2},
+  ];
+  let idx=0, selectedd=-1, score=0, timer=30, tInt=null;
+
+  const box=document.getElementById("q33Box");
+  const timeEl=document.getElementById("q33Time");
+  const nextBtn=document.getElementById("q33Next");
+
+  function startTimer(){
+    tInt=setInterval(()=>{
+      timer--;
+      timeEl.textContent=timer;
+      if(timer<=0){
+        clearInterval(tInt);
+        finish();
+      }
+    },1000);
+  }
+
+  function render(){
+    const item=q33Data[idx];
+    selectedd=-1;
+    box.innerHTML=`
+      <h3>Q${idx+1}. ${item.q}</h3>
+      <div id="q33Opts"></div>
+      <p class="q33-muted">Select an option then Next.</p>
+    `;
+    const optsEl=document.getElementById("q33Opts");
+    item.opts.forEach((o,i)=>{
+      const div=document.createElement("div");
+      div.className="q33-opt";
+      div.textContent=o;
+      div.onclick=()=>{
+        selectedd=i;
+        [...optsEl.children].forEach(c=>c.classList.remove("isSel"));
+        div.classList.add("isSel");
+      };
+      optsEl.appendChild(div);
+    });
+    nextBtn.textContent = (idx===q33Data.length-1) ? "Finish" : "Next";
+  }
+
+  function applyMark(){
+    const item=q33Data[idx];
+    if(selectedd===-1) return;            // unanswered => 0
+    if(selectedd===item.ans) score += 4;  // correct
+    else score -= 1;                     // wrong (negative)
+  }
+
+  function finish(){
+    box.innerHTML=`<h2>Result</h2>
+      <p><b>Score:</b> ${score}</p>
+      <p class="q33-muted">Max: ${q33Data.length*4}</p>`;
+    nextBtn.disabled=true;
+  }
+
+  nextBtn.onclick=()=>{
+    applyMark();
+    if(idx<q33Data.length-1){ idx++; render(); }
+    else { clearInterval(tInt); finish(); }
+  };
+
+  render(); startTimer();
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .s34-card{max-width:920px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .s34-screen{height:14px;background:#111827;border-radius:999px;margin:14px 0}
+  .s34-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+  .s34-seat{height:34px;border-radius:8px;border:1px solid #cbd5e1;cursor:pointer;display:grid;place-items:center;background:#fff}
+  .s34-seat.isBooked{background:#cbd5e1;cursor:not-allowed}
+  .s34-seat.isSel{background:#16a34a;color:#fff;border-color:#16a34a}
+  .s34-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .s34-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .s34-muted{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="s34-card">
+  <h2>Movie Seat Booking</h2>
+  <div class="s34-muted">Green = selected • Grey = already booked</div>
+  <div class="s34-screen"></div>
+
+  <div class="s34-grid" id="s34Seats"></div>
+
+  <div class="s34-row">
+    <div>
+      Selected: <b id="s34Count">0</b> seats
+      • Total: ₹ <b id="s34Total">0</b>
+    </div>
+    <button class="s34-btn" id="s34Confirm">Confirm Booking</button>
+  </div>
+</div>
+
+<script>
+  const seatEl=document.getElementById("s34Seats");
+  const countEl=document.getElementById("s34Count");
+  const totalE=document.getElementById("s34Total");
+  const price=150;
+
+  const rows=6, cols=10;
+  const booked=new Set(["A1","A2","B5","C7","D3","E10"]); // demo booked
+  const select=new Set();
+
+  function code(r,c){
+    return String.fromCharCode(65+r)+ (c+1);
+  }
+
+  function render(){
+    seatEl.innerHTML="";
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const id=code(r,c);
+        const div=document.createElement("div");
+        div.className="s34-seat";
+        div.textContent=id;
+
+        if(booked.has(id)) div.classList.add("isBooked");
+        if(select.has(id)) div.classList.add("isSel");
+
+        div.onclick=()=>{
+          if(booked.has(id)) return;
+          if(select.has(id)) select.delete(id);
+          else select.add(id);
+          update();
+          render();
+        };
+        seatEl.appendChild(div);
+      }
+    }
+  }
+
+  function update(){
+    countEl.textContent=selected.size;
+    totalEl.textContent=selected.size * price;
+  }
+
+  document.getElementById("s34Confirm").onclick=()=>{
+    if(selected.size===0){ alert("Select seats first!"); return; }
+    selected.forEach(s=>booked.add(s));
+    selected.clear();
+    update(); render();
+    alert("Booking confirmed (demo).");
+  };
+
+  update(); render();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .inv36-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .inv36-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0}
+  .inv36-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left}
+  .inv36-right{text-align:right}
+  .inv36-muted{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="inv36-wrap">
+  <div class="inv36-card">
+    <h2>Add Item</h2>
+    <input id="inv36Name" placeholder="Item name">
+    <input id="inv36Qty" type="number" placeholder="Qty" value="1">
+    <input id="inv36Price" type="number" placeholder="Unit price">
+    <input id="inv36Tax" type="number" placeholder="Tax % (e.g., 18)" value="18">
+    <button class="inv36-btn" id="inv36Add">Add</button>
+    <p class="inv36-muted">Total + Tax auto calculate.</p>
+  </div>
+
+  <div class="inv36-card">
+    <h2>Invoice</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th class="inv36-right">Amount</th><th></th></tr></thead>
+      <tbody id="inv36Body"></tbody>
+    </table>
+    <hr>
+    <div class="inv36-right">
+      Subtotal: ₹ <b id="inv36Sub">0</b><br>
+      Tax: ₹ <b id="inv36TaxAmt">0</b><br>
+      Grand Total: ₹ <b id="inv36Grand">0</b>
+    </div>
+  </div>
+</div>
+
+<script>
+  const itemss=[];
+  const el={
+    name:document.getElementById("inv36Name"),
+    qty:document.getElementById("inv36Qty"),
+    price:document.getElementById("inv36Price"),
+    tax:document.getElementById("inv36Tax"),
+    add:document.getElementById("inv36Add"),
+    body:document.getElementById("inv36Body"),
+    sub:document.getElementById("inv36Sub"),
+    taxAmt:document.getElementById("inv36TaxAmt"),
+    grand:document.getElementById("inv36Grand"),
+  };
+
+  function calc(){
+    const subtotal=items.reduce((a,i)=>a+(i.qty*i.price),0);
+    const taxPct=Number(el.tax.value)||0;
+    const tax= subtotal * (taxPct/100);
+    const grand=subtotal+tax;
+    el.sub.textContent=subtotal.toFixed(2);
+    el.taxAmt.textContent=tax.toFixed(2);
+    el.grand.textContent=grand.toFixed(2);
+  }
+
+  function render(){
+    el.body.innerHTML="";
+    itemss.forEach(it=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${it.name}</td><td>${it.qty}</td>
+                    <td class="inv36-right">₹ ${(it.qty*it.price).toFixed(2)}</td>
+                    <td><button class="inv36-btn" style="background:#ef4444" data-del="${it.id}">Del</button></td>`;
+      el.body.appendChild(tr);
+    });
+    el.body.querySelectorAll("[data-del]").forEach(btn=>{
+      btn.onclick=()=>{
+        const id=btn.dataset.del;
+        const idx=itemss.findIndex(x=>x.id===id);
+        if(idx>-1) itemss.splice(idx,1);
+        render(); calc();
+      };
+    });
+    calc();
+  }
+
+  el.add.onclick=()=>{
+    const name=el.name.value.trim();
+    const qty=Number(el.qty.value);
+    const price=Number(el.price.value);
+    if(!name || !qty || qty<=0 || !price || price<=0) return;
+
+    itemss.push({id:crypto.randomUUID(), name, qty, price});
+    el.name.value=""; el.qty.value=1; el.price.value="";
+    render();
+  };
+
+  el.tax.oninput=calc;
+  render();
+</script>
+
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .dd37-card{max-width:820px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .dd37-drop{border:2px dashed #cbd5e1;border-radius:14px;padding:20px;text-align:center;background:#f8fafc}
+  .dd37-drop.isOver{border-color:#2563eb;background:#eff6ff}
+  .dd37-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .dd37-item{border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+  img{max-width:100%;border-radius:10px;display:block}
+  .dd37-muted{color:#6b7280;font-size:13px}
+  @media(max-width:900px){.dd37-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="dd37-card">
+  <h2>Drag & Drop File Preview</h2>
+  <div class="dd37-drop" id="dd37Drop">
+    <b>Drop files here</b>
+    <div class="dd37-muted">Images preview, other files show name + size</div>
+    <input type="file" id="dd37File" multiple style="margin-top:12px">
+  </div>
+
+  <div class="dd37-grid" id="dd37List"></div>
+</div>
+
+<script>
+  const drop=document.getElementById("dd37Drop");
+  const fileInp=document.getElementById("dd37File");
+  const lists=document.getElementById("dd37List");
+
+  function humanSize(bytes){
+    const units=["B","KB","MB","GB"];
+    let i=0,v=bytes;
+    while(v>1024 && i<units.length-1){v/=1024;i++}
+    return v.toFixed(1)+" "+units[i];
+  }
+
+  function renderFiles(files){
+    lists.innerHTML="";
+    [...files].forEach(f=>{
+      const div=document.createElement("div");
+      div.className="dd37-item";
+      if(f.type.startsWith("image/")){
+        const img=document.createElement("img");
+        img.alt=f.name;
+        img.src=URL.createObjectURL(f);
+        div.appendChild(img);
+        div.innerHTML += `<p><b>${f.name}</b><br><span class="dd37-muted">${humanSize(f.size)}</span></p>`;
+      } else {
+        div.innerHTML = `<b>${f.name}</b><br><span class="dd37-muted">${f.type||"file"} • ${humanSize(f.size)}</span>`;
+      }
+      lists.appendChild(div);
+    });
+  }
+
+  drop.addEventListener("dragover",(e)=>{e.preventDefault(); drop.classList.add("isOver");});
+  drop.addEventListener("dragleave",()=>drop.classList.remove("isOver"));
+  drop.addEventListener("drop",(e)=>{
+    e.preventDefault(); drop.classList.remove("isOver");
+    renderFiles(e.dataTransfer.files);
+  });
+
+  fileInp.onchange=()=>renderFiles(fileInp.files);
+</script>
+<hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .pc38-wrap{max-width:980px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .pc38-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  .pc38-table{width:100%;border-collapse:collapse;margin-top:12px}
+  .pc38-table td{padding:10px;border-bottom:1px solid #e5e7eb}
+  .pc38-muted{color:#6b7280;font-size:13px}
+</style>
+</head>
+<body>
+<div class="pc38-wrap">
+  <div class="pc38-card">
+    <h2>Select Products</h2>
+    <p class="pc38-muted">Choose 2 products to compare.</p>
+    <select id="pc38A"></select>
+    <br><br>
+    <select id="pc38B"></select>
+  </div>
+
+  <div class="pc38-card">
+    <h2>Comparison</h2>
+    <table class="pc38-table" id="pc38Table"></table>
+  </div>
+</div>
+
+<script>
+  const productss=[
+    {id:"p1", name:"Phone A", price:19999, ram:"6GB", storage:"128GB", battery:"5000mAh"},
+    {id:"p2", name:"Phone B", price:24999, ram:"8GB", storage:"128GB", battery:"5200mAh"},
+    {id:"p3", name:"Phone C", price:29999, ram:"8GB", storage:"256GB", battery:"4800mAh"},
+  ];
+  const aSel=document.getElementById("pc38A");
+  const bSel=document.getElementById("pc38B");
+  const table=document.getElementById("pc38Table");
+
+  function fill(sel){
+    productss.forEach(p=>{
+      const op=document.createElement("option");
+      op.value=p.id; op.textContent=p.name;
+      sel.appendChild(op);
+    });
+  }
+  function find(id){ return productss.find(p=>p.id===id); }
+
+  function render(){
+    const A=find(aSel.value);
+    const B=find(bSel.value);
+    const rows=[
+      ["Name", A.name, B.name],
+      ["Price", "₹ "+A.price, "₹ "+B.price],
+      ["RAM", A.ram, B.ram],
+      ["Storage", A.storage, B.storage],
+      ["Battery", A.battery, B.battery],
+    ];
+    table.innerHTML="";
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td>`;
+      table.appendChild(tr);
+    });
+  }
+
+  fill(aSel); fill(bSel);
+  aSel.value="p1"; bSel.value="p2";
+  aSel.onchange=render; bSel.onchange=render;
+  render();
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .sp40-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .sp40-bar{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+  .sp40-fill{height:100%;width:0;background:#2563eb;transition:width .35s ease}
+  .sp40-steps{display:flex;justify-content:space-between;margin-top:10px}
+  .sp40-dot{width:26px;height:26px;border-radius:999px;background:#cbd5e1;display:grid;place-items:center;color:#111827;font-weight:700}
+  .sp40-dot.isDone{background:#16a34a;color:#fff}
+  .sp40-box{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:14px}
+  .sp40-row{display:flex;gap:10px;margin-top:12px}
+  .sp40-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .sp40-btn:disabled{opacity:.5;cursor:not-allowed}
+  input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="sp40-card">
+  <h2>Multi-step Form</h2>
+
+  <div class="sp40-bar"><div class="sp40-fill" id="sp40Fill"></div></div>
+  <div class="sp40-steps" id="sp40Dots"></div>
+
+  <div class="sp40-box" id="sp40StepBox"></div>
+
+  <div class="sp40-row">
+    <button class="sp40-btn" id="sp40Prev">Prev</button>
+    <button class="sp40-btn" id="sp40Next">Next</button>
+  </div>
+</div>
+
+<script>
+  const steps=[
+    {title:"Step 1: Basic", html:`<input placeholder="Name">`},
+    {title:"Step 2: Contact", html:`<input placeholder="Email">`},
+    {title:"Step 3: Confirm", html:`<p>Review & submit (demo).</p>`},
+  ];
+  let cur=0;
+
+  const fill=document.getElementById("sp40Fill");
+  const dots=document.getElementById("sp40Dots");
+  const boxx=document.getElementById("sp40StepBoxx");
+  const prev=document.getElementById("sp40Prev");
+  const next=document.getElementById("sp40Next");
+
+  function renderDots(){
+    dots.innerHTML="";
+    steps.forEach((s,i)=>{
+      const d=document.createElement("div");
+      d.className="sp40-dot";
+      d.textContent=i+1;
+      if(i<=cur) d.classList.add("isDone");
+      dots.appendChild(d);
+    });
+  }
+
+  function render(){
+    boxx.innerHTML=`<h3 style="margin:0 0 10px">${steps[cur].title}</h3>${steps[cur].html}`;
+    const pct = (cur/(steps.length-1))*100;
+    fill.style.width = pct + "%";
+    renderDots();
+
+    prev.disabled = cur===0;
+    next.textContent = (cur===steps.length-1) ? "Finish" : "Next";
+  }
+
+  prev.onclick=()=>{ if(cur>0){cur--; render();} };
+  next.onclick=()=>{
+    if(cur<steps.length-1){cur++; render();}
+    else alert("Finished (demo).");
+  };
+
+  render();
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .t41-top{max-width:1100px;margin:auto;display:flex;gap:10px;flex-wrap:wrap}
+  .t41-inp{flex:1;min-width:220px;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+  .t41-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .t41-board{max-width:1100px;margin:14px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .t41-col{background:#fff;border-radius:14px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .t41-col h3{margin:0 0 10px}
+  .t41-zone{min-height:260px;border:2px dashed #e5e7eb;border-radius:12px;padding:10px}
+  .t41-card{background:#111827;color:#fff;border-radius:12px;padding:10px;margin:10px 0;cursor:grab}
+  .t41-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .t41-mini{display:flex;gap:8px}
+  .t41-mini button{border:0;border-radius:10px;padding:7px 9px;cursor:pointer}
+  .t41-edit{background:#f59e0b;color:#111827}
+  .t41-del{background:#ef4444;color:#fff}
+  .t41-over{background:#eff6ff;border-color:#2563eb}
+  @media(max-width:900px){.t41-board{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="t41-top">
+  <input class="t41-inp" id="t41Task" placeholder="New task...">
+  <button class="t41-btn" id="t41Add">Add to Todo</button>
+</div>
+
+<div class="t41-board">
+  <div class="t41-col"><h3>Todo</h3><div class="t41-zone" data-col="todo"></div></div>
+  <div class="t41-col"><h3>Doing</h3><div class="t41-zone" data-col="doing"></div></div>
+  <div class="t41-col"><h3>Done</h3><div class="t41-zone" data-col="done"></div></div>
+</div>
+
+<script>
+  const zone=[...document.querySelectorAll(".t41-zone")];
+  const inputt=document.getElementById("t41Task");
+  const addBttn=document.getElementById("t41Add");
+  let dragg=null;
+
+  function makeCard(text){
+    const card=document.createElement("div");
+    card.className="t41-card";
+    card.dragg=true;
+
+    const row=document.createElement("div");
+    row.className="t41-row";
+    const label=document.createElement("div");
+    label.textContent=text;
+
+    const mini=document.createElement("div");
+    mini.className="t41-mini";
+    const edit=document.createElement("button");
+    edit.className="t41-edit";
+    edit.textContent="Edit";
+    const del=document.createElement("button");
+    del.className="t41-del";
+    del.textContent="Del";
+
+    edit.onclick=()=>{
+      const newText=prompt("Edit task:", label.textContent);
+      if(newText && newText.trim()) label.textContent=newText.trim();
+    };
+    del.onclick=()=>card.remove();
+
+    mini.append(edit,del);
+    row.append(label,mini);
+    card.append(row);
+
+    card.addEventListener("dragstart", ()=>{
+      dragg=card;
+      setTimeout(()=>card.style.opacity="0.4",0);
+    });
+    card.addEventListener("dragend", ()=>{
+      dragg=null;
+      card.style.opacity="1";
+    });
+
+    return card;
+  }
+
+  addBttn.onclick=()=>{
+    const t=input.value.trim();
+    if(!t) return;
+    zone[0].appendChild(makeCard(t));
+    inputt.value="";
+  };
+
+  zone.forEach(z=>{
+    z.addEventListener("dragover",(e)=>{e.preventDefault(); z.classList.add("t41-over");});
+    z.addEventListener("dragleave",()=>z.classList.remove("t41-over"));
+    z.addEventListener("drop",()=>{
+      z.classList.remove("t41-over");
+      if(dragg) z.appendChild(dragg);
+    });
+  });
+</script>
+<hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb}
+  .ad42-layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh;transition:.2s}
+  .ad42-side{background:#111827;color:#fff;padding:14px;position:sticky;top:0;height:100vh}
+  .ad42-brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .ad42-toggle{border:0;border-radius:10px;padding:8px 10px;background:#2563eb;color:#fff;cursor:pointer}
+  .ad42-link{padding:10px;border-radius:10px;cursor:pointer}
+  .ad42-link:hover{background:rgba(255,255,255,.08)}
+  .ad42-main{padding:18px}
+  .ad42-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .ad42-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08);border-left:6px solid #2563eb}
+  .ad42-collapsed .ad42-layout{grid-template-columns:78px 1fr}
+  .ad42-collapsed .ad42-text{display:none}
+  @media(max-width:900px){
+    .ad42-layout{grid-template-columns:1fr}
+    .ad42-side{height:auto;position:relative}
+  }
+</style>
+</head>
+<body class="" id="ad42Body">
+  <div class="ad42-layout">
+    <aside class="ad42-side">
+      <div class="ad42-brand">
+        <b>Admin</b>
+        <button class="ad42-toggle" id="ad42Btn">☰</button>
+      </div>
+
+      <div class="ad42-link">🏠 <span class="ad42-text">Home</span></div>
+      <div class="ad42-link">📦 <span class="ad42-text">Orders</span></div>
+      <div class="ad42-link">👤 <span class="ad42-text">Users</span></div>
+      <div class="ad42-link">⚙️ <span class="ad42-text">Settings</span></div>
+    </aside>
+
+    <main class="ad42-main">
+      <h2>Dashboard</h2>
+      <div class="ad42-grid">
+        <div class="ad42-card"><b>Revenue</b><div>₹ 98,000</div></div>
+        <div class="ad42-card"><b>Orders</b><div>310</div></div>
+        <div class="ad42-card"><b>Users</b><div>1,240</div></div>
+      </div>
+    </main>
+  </div>
+
+<script>
+  const body=document.getElementById("ad42Body");
+  document.getElementById("ad42Btn").onclick=()=>body.classList.toggle("ad42-collapsed");
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .b44-card{max-width:980px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .b44-row{display:flex;gap:10px;flex-wrap:wrap}
+  .b44-btn{padding:10px 14px;border:0;border-radius:999px;background:#eef2ff;cursor:pointer}
+  .b44-btn.isOn{background:#2563eb;color:#fff}
+  .b44-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .b44-post{border:1px solid #e5e7eb;border-radius:14px;padding:12px}
+  .b44-tag{font-size:12px;background:#f1f5f9;border-radius:999px;padding:4px 8px}
+  .b44-muted{color:#6b7280;font-size:13px}
+  @media(max-width:900px){.b44-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="b44-card">
+  <h2>Blog</h2>
+  <div class="b44-row" id="b44Cats"></div>
+  <div class="b44-grid" id="b44Grid"></div>
+</div>
+
+<script>
+  const posts=[
+    {id:1,title:"Learn HTML Basics",cat:"Web",desc:"Start with structure and tags."},
+    {id:2,title:"CSS Flexbox Guide",cat:"Web",desc:"Layout faster with flex."},
+    {id:3,title:"Python Tips",cat:"Programming",desc:"Write cleaner code."},
+    {id:4,title:"JS DOM Tricks",cat:"Programming",desc:"Make UI interactive."},
+    {id:5,title:"UI Design Basics",cat:"Design",desc:"Spacing, typography, colors."},
+  ];
+  const cats=["All",...new Set(posts.map(p=>p.cat))];
+  let active="All";
+
+  const catsEl=document.getElementById("b44Cats");
+  const grid=document.getElementById("b44Grid");
+
+  function renderCats(){
+    catsEl.innerHTML="";
+    cats.forEach(c=>{
+      const btn=document.createElement("button");
+      btn.className="b44-btn"+(c===active?" isOn":"");
+      btn.textContent=c;
+      btn.onclick=()=>{active=c; renderCats(); renderPosts();};
+      catsEl.appendChild(btn);
+    });
+  }
+
+  function renderPosts(){
+    const list=posts.filter(p=>active==="All"||p.cat===active);
+    grid.innerHTML="";
+    list.forEach(p=>{
+      const div=document.createElement("div");
+      div.className="b44-post";
+      div.innerHTML=`<span class="b44-tag">${p.cat}</span>
+                     <h3 style="margin:10px 0 6px">${p.title}</h3>
+                     <p class="b44-muted">${p.desc}</p>`;
+      grid.appendChild(div);
+    });
+  }
+
+  renderCats(); renderPosts();
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .p45-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  select,input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin:8px 0}
+  .p45-out{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:12px}
+  .p45-pill{display:inline-block;background:#eef2ff;border-radius:999px;padding:6px 10px}
+</style>
+</head>
+<body>
+<div class="p45-card">
+  <h2>Pricing Calculator</h2>
+  <label>Plan</label>
+  <select id="p45Plan">
+    <option value="basic">Basic (₹499)</option>
+    <option value="pro">Pro (₹999)</option>
+    <option value="team">Team (₹1999)</option>
+  </select>
+
+  <label>Users</label>
+  <input id="p45Users" type="number" value="1" min="1"/>
+
+  <label>Add-ons</label>
+  <label><input type="checkbox" class="p45Addon" value="support"> Priority Support (+₹299)</label><br>
+  <label><input type="checkbox" class="p45Addon" value="storage"> Extra Storage (+₹199)</label><br>
+  <label><input type="checkbox" class="p45Addon" value="reports"> Reports (+₹149)</label>
+
+  <div class="p45-out">
+    Total: ₹ <b id="p45Total">0</b> / month
+    <div style="margin-top:6px"><span class="p45-pill" id="p45Break"></span></div>
+  </div>
+</div>
+
+<script>
+  const prices={basic:499, pro:999, team:1999};
+  const addonPrice={support:299, storage:199, reports:149};
+
+  const plan=document.getElementById("p45Plan");
+  const users=document.getElementById("p45Users");
+  const total=document.getElementById("p45Total");
+  const br=document.getElementById("p45Break");
+
+  function calc(){
+    const base=prices[plan.value];
+    const u=Math.max(1, Number(users.value)||1);
+    const addons=[...document.querySelectorAll(".p45Addon:checked")].map(x=>x.value);
+    const addSum=addons.reduce((a,k)=>a+addonPrice[k],0);
+    const grand=(base*u)+addSum;
+
+    total.textContent=grand;
+    br.textContent=`Base ₹${base} × ${u} users + Addons ₹${addSum}`;
+  }
+
+  plan.onchange=calc; users.oninput=calc;
+  document.querySelectorAll(".p45Addon").forEach(a=>a.onchange=calc);
+  calc();
+</script>
+<hr><hr>
+
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .lb46-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .lb46-btn{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer;margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left}
+</style>
+
+<div class="lb46-card">
+  <h2>Leaderboard</h2>
+  <button class="lb46-btn" id="lb46Sort">Sort by Score</button>
+  <button class="lb46-btn" style="background:#16a34a" id="lb46Add">Add Random Score</button>
+
+  <table>
+    <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
+    <tbody id="lb46Body"></tbody>
+  </table>
+</div>
+
+<script>
+  let da=[
+    {name:"Arun",score:120},
+    {name:"Bala",score:180},
+    {name:"Devi",score:160},
+    {name:"Karthi",score:140},
+  ];
+  const bodyy=document.getElementById("lb46Body");
+
+  function render(){
+    const sorted=[...da].sort((a,b)=>b.score-a.score);
+    bodyy.innerHTML="";
+    sorted.forEach((r,i)=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${i+1}</td><td>${r.name}</td><td>${r.score}</td>`;
+      bodyy.appendChild(tr);
+    });
+  }
+
+  document.getElementById("lb46Sort").onclick=render;
+  document.getElementById("lb46Add").onclick=()=>{
+    da.push({name:"Player "+(da.length+1),score:Math.floor(Math.random()*200)});
+    render();
+  };
+
+  render();
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .pl48-card{max-width:760px;margin:auto;background:#fff;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .pl48-opt{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:10px 0}
+  .pl48-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .pl48-btn{padding:8px 10px;border:0;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}
+  .pl48-bar{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:10px}
+  .pl48-fill{height:100%;width:0;background:#16a34a;transition:width .35s ease}
+  .pl48-danger{background:#ef4444}
+</style>
+</head>
+<body>
+<div class="pl48-card">
+  <h2>Poll: Best Framework?</h2>
+  <div id="pl48List"></div>
+  <button class="pl48-btn pl48-danger" id="pl48Reset">Reset Poll</button>
+</div>
+
+<script>
+  const PL48_KEY="pl48_votes_v1";
+  const option=["React","Vue","Angular","Svelte"];
+  const llist=document.getElementById("pl48List");
+
+  function load(){
+    const d=JSON.parse(localStorage.getItem(PL48_KEY)||"null");
+    if(d) return d;
+    const init={};
+    option.forEach(o=>init[o]=0);
+    localStorage.setItem(PL48_KEY, JSON.stringify(init));
+    return init;
+  }
+  function save(d){ localStorage.setItem(PL48_KEY, JSON.stringify(d)); }
+  function total(d){ return Object.values(d).reduce((a,b)=>a+b,0) || 1; }
+
+  function render(){
+    const votes=load();
+    const sum=total(votes);
+    llist.innerHTML="";
+    option.forEach(o=>{
+      const pct=Math.round((votes[o]/sum)*100);
+      const div=document.createElement("div");
+      div.className="pl48-opt";
+      div.innerHTML=`
+        <div class="pl48-row">
+          <b>${o}</b>
+          <div>
+            <span>${votes[o]} • ${pct}%</span>
+            <button class="pl48-btn" data-vote="${o}">Vote</button>
+          </div>
+        </div>
+        <div class="pl48-bar"><div class="pl48-fill" style="width:${pct}%"></div></div>
+      `;
+      list.appendChild(div);
+    });
+
+    list.querySelectorAll("[data-vote]").forEach(btn=>{
+      btn.onclick=()=>{
+        const key=btn.dataset.vote;
+        const v=load(); v[key]++; save(v); render();
+      };
+    });
+  }
+
+  document.getElementById("pl48Reset").onclick=()=>{
+    const init={}; options.forEach(o=>init[o]=0);
+    save(init); render();
+  };
+
+  render();
+</script>
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#f4f6fb;padding:20px}
+  .ch49-card{max-width:520px;margin:auto;background:#fff;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.08);overflow:hidden}
+  .ch49-head{background:#111827;color:#fff;padding:12px 14px}
+  .ch49-body{height:380px;overflow:auto;padding:12px;display:grid;gap:10px;background:#f8fafc}
+  .ch49-b{max-width:80%;padding:10px 12px;border-radius:14px}
+  .ch49-me{justify-self:end;background:#2563eb;color:#fff}
+  .ch49-bot{justify-self:start;background:#fff;border:1px solid #e5e7eb}
+  .ch49-foot{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff}
+  .ch49-inp{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:12px}
+  .ch49-send{border:0;border-radius:12px;padding:10px 12px;background:#2563eb;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="ch49-card">
+  <div class="ch49-head"><b>Chat</b> (simulation)</div>
+  <div class="ch49-body" id="ch49Body">
+    <div class="ch49-b ch49-bot">Hi! Send a message 😊</div>
+  </div>
+  <div class="ch49-foot">
+    <input class="ch49-inp" id="ch49Inp" placeholder="Type...">
+    <button class="ch49-send" id="ch49Send">Send</button>
+  </div>
+</div>
+
+<script>
+  const bbody=document.getElementById("ch49Body");
+  const inp=document.getElementById("ch49Inp");
+
+  function add(text,who){
+    const div=document.createElement("div");
+    div.className="ch49-b "+(who==="me"?"ch49-me":"ch49-bot");
+    div.textContent=text;
+    bbody.appendChild(div);
+    bbody.scrollTop=bbody.scrollHeight;
+  }
+
+  document.getElementById("ch49Send").onclick=()=>{
+    const t=inp.value.trim(); if(!t) return;
+    add(t,"me"); inp.value="";
+    setTimeout(()=>add("Bot reply: "+t,"bot"), 600);
+  };
+</script>
+
+<hr><hr>
+
+<style>
+  *{box-sizing:border-box;font-family:system-ui,Arial}
+  body{margin:0;background:#0b1220;color:#e5e7eb}
+  .pf50-nav{position:sticky;top:0;z-index:9;background:rgba(11,18,32,.8);backdrop-filter:blur(10px);
+            display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .pf50-links a{color:#e5e7eb;text-decoration:none;margin-left:12px;opacity:.85}
+  .pf50-links a:hover{opacity:1}
+  .pf50-hero{padding:70px 16px;background:linear-gradient(120deg,#2563eb,#111827)}
+  .pf50-wrap{max-width:980px;margin:auto}
+  .pf50-hero h1{margin:0;font-size:48px}
+  .pf50-hero p{max-width:680px;opacity:.9}
+  .pf50-btn{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:12px;background:#fff;color:#111827;text-decoration:none;font-weight:700}
+  .pf50-sec{padding:46px 16px;background:#0b1220}
+  .pf50-card{background:#111827;border-radius:16px;padding:16px;box-shadow:0 14px 30px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08)}
+  .pf50-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .pf50-pill{display:inline-block;background:rgba(255,255,255,.08);border-radius:999px;padding:6px 10px;margin:6px 6px 0 0}
+  .pf50-topBtn{position:fixed;right:18px;bottom:18px;border:0;border-radius:999px;width:52px;height:52px;background:#2563eb;color:#fff;cursor:pointer;display:none}
+  .pf50-topBtn.isOn{display:block}
+  @media(max-width:900px){.pf50-grid{grid-template-columns:1fr}.pf50-hero h1{font-size:38px}}
+</style>
+</head>
+<body>
+  <header class="pf50-nav">
+    <b>MyPortfolio</b>
+    <nav class="pf50-links">
+      <a href="#pf50About">About</a>
+      <a href="#pf50Projects">Projects</a>
+      <a href="#pf50Skills">Skills</a>
+      <a href="#pf50Contact">Contact</a>
+    </nav>
+  </header>
+
+  <section class="pf50-hero">
+    <div class="pf50-wrap">
+      <h1>Hi, I'm Karthi</h1>
+      <p>Front-end developer building clean UI with HTML, CSS, JavaScript.</p>
+      <a class="pf50-btn" href="#pf50Projects">View Projects</a>
+    </div>
+  </section>
+
+  <section class="pf50-sec" id="pf50About">
+    <div class="pf50-wrap pf50-card">
+      <h2>About</h2>
+      <p>Simple interactive portfolio demo with smooth scrolling + scroll-to-top button.</p>
+    </div>
+  </section>
+
+  <section class="pf50-sec" id="pf50Projects">
+    <div class="pf50-wrap">
+      <h2>Projects</h2>
+      <div class="pf50-grid">
+        <div class="pf50-card"><b>Project 1</b><p>Landing page</p></div>
+        <div class="pf50-card"><b>Project 2</b><p>Dashboard UI</p></div>
+        <div class="pf50-card"><b>Project 3</b><p>Mini apps</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf50-sec" id="pf50Skills">
+    <div class="pf50-wrap pf50-card">
+      <h2>Skills</h2>
+      <span class="pf50-pill">HTML</span>
+      <span class="pf50-pill">CSS</span>
+      <span class="pf50-pill">JavaScript</span>
+      <span class="pf50-pill">Bootstrap</span>
+      <span class="pf50-pill">Git</span>
+    </div>
+  </section>
+
+  <section class="pf50-sec" id="pf50Contact">
+    <div class="pf50-wrap pf50-card">
+      <h2>Contact</h2>
+      <p>Email: you@example.com</p>
+      <p>Phone: +91 XXXXX XXXXX</p>
+    </div>
+  </section>
+
+  <button class="pf50-topBtn" id="pf50Top">↑</button>
+
+<script>
+  // smooth scroll for internal links
+  document.querySelectorAll('a[href^="#pf50"]').forEach(a=>{
+    a.addEventListener("click",(e)=>{
+      e.preventDefault();
+      const id=a.getAttribute("href");
+      document.querySelector(id).scrollIntoView({behavior:"smooth"});
+    });
+  });
+
+  // scroll-to-top
+  const topBtn=document.getElementById("pf50Top");
+  window.addEventListener("scroll",()=>{
+    topBtn.classList.toggle("isOn", window.scrollY>500);
+  });
+  topBtn.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
+</script>
+<hr><hr>
+
+</body>
+</html>  
